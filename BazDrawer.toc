@@ -2,10 +2,12 @@
 ## Title: BazDrawer
 ## Notes: Slide-out side drawer that hosts docked Baz Suite widgets
 ## Author: Baz4k
-## Version: 003
+## Version: 004
 ## X-License: GPL v2
 ## Category: Baz Suite
 ## X-Category: Interface Enhancements
+## X-Website: https://www.curseforge.com/wow/addons/bazdrawer
+## X-Curse-Project-ID: 1511379
 ## Dependencies: BazCore
 ## IconTexture: 7416769
 ## SavedVariables: BazDrawerDB

@@ -1,5 +1,8 @@
 # BazDrawer Changelog
 
+## 004 - CurseForge Project Metadata
+- Added `X-Curse-Project-ID: 1511379` and `X-Website` TOC headers so the BigWigs packager can upload releases to CurseForge automatically
+
 ## 003 - Real Drawer Icon
 - Switched both the addon settings icon and the minimap button icon to the Suramar Dresser FileDataID (7416769) — an actual in-game drawer model instead of the previous `INV_Misc_Drawer_02` path that didn't resolve to any real texture
 

@@ -1,5 +1,8 @@
 # BazDrawer Changelog
 
+## 002 - Icon Fix
+- Fixed missing in-game settings icon — TOC now references `Interface\Icons\INV_Misc_Drawer_02` (the same wooden drawer icon used by the minimap button) instead of a bundled PNG path that didn't exist
+
 ## 001 - Initial Release
 - Slide-out side drawer addon for the Baz Suite
 - Full-height side panel with metal pull-tab handle, switchable between left and right edges

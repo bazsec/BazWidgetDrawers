@@ -1,0 +1,5 @@
+# No bundled libs - BazCore is an external dependency
+.DS_Store
+Thumbs.db
+*.bak
+*.swp

@@ -10,23 +10,31 @@ local C  = QT.C
 -- Blizzard tracker visibility
 ---------------------------------------------------------------------------
 
-local savedBlizzShow
+local blizzTrackerHooked = false
+local blizzTrackerSuppressed = false
 
 function QT.ApplyBlizzardTrackerVisibility()
     if not ObjectiveTrackerFrame then return end
     local hide = addon:GetWidgetSetting(C.WIDGET_ID, "hideBlizzardTracker", true)
-    if hide ~= false then
-        if savedBlizzShow == nil then
-            savedBlizzShow = ObjectiveTrackerFrame.Show
-        end
+    blizzTrackerSuppressed = (hide ~= false)
+
+    if blizzTrackerSuppressed then
         ObjectiveTrackerFrame:Hide()
-        ObjectiveTrackerFrame.Show = ObjectiveTrackerFrame.Hide
     else
-        if savedBlizzShow then
-            ObjectiveTrackerFrame.Show = savedBlizzShow
-            savedBlizzShow = nil
-        end
         ObjectiveTrackerFrame:Show()
+    end
+
+    -- Hook Show once (hooksecurefunc preserves the original secure
+    -- method so it doesn't taint the frame's method table — unlike
+    -- the old approach of replacing Show with Hide which tainted
+    -- everything downstream including UnitFrame health bars).
+    if not blizzTrackerHooked then
+        hooksecurefunc(ObjectiveTrackerFrame, "Show", function(self)
+            if blizzTrackerSuppressed then
+                self:Hide()
+            end
+        end)
+        blizzTrackerHooked = true
     end
 end
 

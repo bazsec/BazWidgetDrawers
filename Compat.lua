@@ -1,10 +1,10 @@
--- BazDrawer: Third-party addon compatibility shims
+-- BazDrawer: Compatibility shims
 --
--- This file installs defensive monkey-patches for addons that BazDrawer
--- unintentionally breaks by reparenting the minimap into its drawer
--- widget. The patches are applied only when the target addon is loaded
--- and only touch the specific function that fails, so they're safe if
--- the target addon is not installed or gets updated.
+-- Defensive patches for taint propagation and third-party addon conflicts
+-- caused by BazDrawer modifying Blizzard frames (ObjectiveTrackerFrame,
+-- DurabilityFrame, UIParentRightManagedFrameContainer, Minimap, etc.)
+-- from insecure code. Each shim wraps a specific Blizzard function in
+-- pcall so taint errors are caught silently rather than breaking the UI.
 
 local addon = BazCore:GetAddon("BazDrawer")
 if not addon then return end

@@ -67,34 +67,39 @@ local DURABILITY_SCALE = 1.20  -- upscale the native DurabilityFrame inside our 
 
 local durabilityDocked = false
 local durabilitySuppressed = false
+local durabilityHooked = false
 local savedOnEditModeEnter, savedOnEditModeExit, savedHighlightSystem
 local savedDefaultHideSelection, savedSelectionShow
-local savedDurabilityShow
 
 local NOOP = function() end
 
 ---------------------------------------------------------------------------
--- Full suppression — hide DurabilityFrame AND lock its Show method so it
--- can't re-surface when Blizzard tries to auto-show it on durability drops.
--- Used when the Repair widget is disabled or the user has "Hide Default
--- Durability Frame" checked and the widget isn't in blizzard paper-doll
--- mode. Restore via UnsuppressDurabilityFrame.
+-- Full suppression — hide DurabilityFrame and use hooksecurefunc to
+-- re-hide it whenever Blizzard tries to Show it. The old approach of
+-- replacing DurabilityFrame.Show with Hide tainted the frame's method
+-- table, which propagated through UIParentRightManagedFrameContainer
+-- to UnitFrame health bars and caused "secret number tainted by
+-- BazDrawer" errors. hooksecurefunc preserves the original secure
+-- method so no taint is introduced.
 ---------------------------------------------------------------------------
 
 local function SuppressDurabilityFrame()
     if durabilitySuppressed or not DurabilityFrame then return end
 
-    -- Remove from the right-managed-frame container so it doesn't get
-    -- re-anchored onto the screen every time the manager recalculates.
-    if UIParentRightManagedFrameContainer
-        and UIParentRightManagedFrameContainer.RemoveManagedFrame then
-        UIParentRightManagedFrameContainer:RemoveManagedFrame(DurabilityFrame)
-    end
     DurabilityFrame.ignoreFramePositionManager = true
-
-    savedDurabilityShow = savedDurabilityShow or DurabilityFrame.Show
     DurabilityFrame:Hide()
-    DurabilityFrame.Show = DurabilityFrame.Hide
+
+    -- Hook Show ONCE so any Blizzard-initiated Show is immediately
+    -- re-hidden. hooksecurefunc runs AFTER the original method, so
+    -- the frame flickers for one frame then hides — imperceptible.
+    if not durabilityHooked then
+        hooksecurefunc(DurabilityFrame, "Show", function(self)
+            if durabilitySuppressed then
+                self:Hide()
+            end
+        end)
+        durabilityHooked = true
+    end
 
     durabilitySuppressed = true
 end
@@ -102,16 +107,9 @@ end
 local function UnsuppressDurabilityFrame()
     if not durabilitySuppressed or not DurabilityFrame then return end
 
-    if savedDurabilityShow then
-        DurabilityFrame.Show = savedDurabilityShow
-        savedDurabilityShow = nil
-    end
-
     DurabilityFrame.ignoreFramePositionManager = nil
-    if UIParentRightManagedFrameContainer
-        and UIParentRightManagedFrameContainer.AddManagedFrame then
-        UIParentRightManagedFrameContainer:AddManagedFrame(DurabilityFrame)
-    end
+    -- The hook stays installed but durabilitySuppressed = false
+    -- means it's a no-op, so Show works normally again.
 
     durabilitySuppressed = false
 end

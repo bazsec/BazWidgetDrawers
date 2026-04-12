@@ -1,5 +1,13 @@
 # BazDrawer Changelog
 
+## 013 - Fix UnitFrame Taint Errors
+- **Fixed "secret number value tainted by BazDrawer" errors** on UnitFrame health bars, mana bars, and text status bars when targeting enemies or entering combat
+  - Root cause: BazDrawer was replacing `ObjectiveTrackerFrame.Show` and `DurabilityFrame.Show` with `Hide` directly, which taints the frame's method table. The taint propagated through `UIParentRightManagedFrameContainer` to PlayerFrame/TargetFrame health and mana bars.
+  - Fix: replaced all method overrides (`frame.Show = frame.Hide`) with `hooksecurefunc(frame, "Show", function() if suppressed then self:Hide() end end)`. `hooksecurefunc` appends to the original secure method without replacing it, so no taint is introduced. The suppression behavior is identical — the frame briefly Shows then immediately re-Hides (imperceptible single-frame flicker).
+  - `ObjectiveTrackerFrame` suppression (Options.lua) and `DurabilityFrame` suppression (Repair.lua) both converted to the hooksecurefunc pattern.
+  - Removed `UIParentRightManagedFrameContainer:RemoveManagedFrame(DurabilityFrame)` call — uses `ignoreFramePositionManager = true` flag instead, which the container checks without tainting its internal state.
+  - Removed the pcall wrapper on `UnitFrameHealthBar_Update` from Compat.lua since the taint source is eliminated.
+
 ## 012 - Auto-Complete Popup, Bonus Objectives, Whitelist Filter
 ### Quest Tracker
 - **Auto-complete quest popup** — quests with `isAutoComplete` that are ready to turn in now show a decorative popup inside the Quests group with Blizzard's question mark icon, gold ornamental border (all 8 pieces from AutoQuest-Parts tex coords), serif quest name in `QuestFont_Large`, and "Click to complete quest" header. Clicking opens the turn-in dialog via `ShowQuestComplete(questID)`. The question mark icon pulses red via a BOUNCE animation group.

@@ -256,27 +256,54 @@ function MinimapButtonsWidget:LayoutButtons()
     local orderIndex = {}
     for i, n in ipairs(order) do orderIndex[n] = i end
 
+    -- QueueStatusButton always gets the leftmost slot (index 1)
+    -- regardless of custom order or alphabetical fallback. Everything
+    -- else sorts by the user's custom order, then alphabetically.
     table.sort(list, function(a, b)
+        local aIsEye = (a == QueueStatusButton)
+        local bIsEye = (b == QueueStatusButton)
+        if aIsEye then return true end
+        if bIsEye then return false end
         local ia = orderIndex[a:GetName() or ""]
         local ib = orderIndex[b:GetName() or ""]
         if ia and ib then return ia < ib end
-        if ia then return true end   -- ordered items before unordered
+        if ia then return true end
         if ib then return false end
         return (a:GetName() or "") < (b:GetName() or "")
     end)
 
-    -- Assign buttons to slots in order. We DO NOT call btn:Show() here —
-    -- the buttons are already shown (they're in `list` because we just
-    -- filtered for visibility), and calling Show would retrigger the
-    -- hooksecurefunc Show hooks and recurse. Slot frames still Show/Hide
-    -- themselves so the parent chain renders correctly.
+    -- Compute grid dimensions and centering offset. The grid's total
+    -- width is based on how many columns the visible buttons actually
+    -- occupy (not the max the widget could hold). The offset pushes
+    -- the grid right so the occupied columns are horizontally centered.
+    local cols = self._cols or 1
+    local used = #list
+    local rows = used > 0 and math.ceil(used / cols) or 1
+    local occupiedCols = used > 0 and math.min(used, cols) or 0
+    local gridWidth = occupiedCols * BUTTON_SIZE + math.max(0, occupiedCols - 1) * BUTTON_GAP
+    local usableWidth = DESIGN_WIDTH - PAD * 2
+    local xOffset = PAD + math.max(0, math.floor((usableWidth - gridWidth) / 2))
+
+    -- Reposition slots to the centered grid and assign buttons. We
+    -- DO NOT call btn:Show() — the buttons are already shown (they're
+    -- in `list` because we filtered for visibility), and calling Show
+    -- would retrigger the hooksecurefunc hooks and recurse.
     for i = 1, MAX_SLOTS do
         local slot = self.slots[i]
         local btn = list[i]
         if btn then
-            if btn:GetParent() ~= slot then
-                btn:SetParent(slot)
-            end
+            local col = (i - 1) % cols
+            local row = math.floor((i - 1) / cols)
+            slot:ClearAllPoints()
+            slot:SetPoint("TOPLEFT", f, "TOPLEFT",
+                xOffset + col * (BUTTON_SIZE + BUTTON_GAP),
+                -PAD - row * (BUTTON_SIZE + BUTTON_GAP))
+            -- Always force reparent + re-anchor. Blizzard's
+            -- MicroMenu:Layout can steal the QueueStatusButton back
+            -- between our layout passes, so we can't rely on a
+            -- parent-check guard here — we must assert ownership
+            -- every single pass.
+            btn:SetParent(slot)
             btn:ClearAllPoints()
             btn:SetPoint("CENTER", slot, "CENTER", 0, 0)
             slot:Show()
@@ -284,11 +311,6 @@ function MinimapButtonsWidget:LayoutButtons()
             slot:Hide()
         end
     end
-
-    -- Compute desired height based on used slots only
-    local cols = self._cols or 1
-    local used = #list
-    local rows = used > 0 and math.ceil(used / cols) or 1
     local h = PAD + rows * BUTTON_SIZE + (rows - 1) * BUTTON_GAP + PAD
     if used == 0 then h = MIN_HEIGHT end
     self._desiredHeight = h
@@ -319,13 +341,37 @@ local function AdoptQueueEye(widget)
     if queueAdopted then return end
     if not QueueStatusButton then return end
 
-    -- Stop MicroMenu from clobbering its position on every layout pass
-    if MicroMenu and MicroMenu.buttonsToLayout then
-        for i = #MicroMenu.buttonsToLayout, 1, -1 do
-            if MicroMenu.buttonsToLayout[i] == QueueStatusButton then
-                table.remove(MicroMenu.buttonsToLayout, i)
+    -- Remove from MicroMenu's layout list. This is a one-time removal
+    -- but MicroMenu:Layout can re-add the button, so we also hook
+    -- Layout below to persistently keep it out.
+    local function RemoveFromMicroMenu()
+        if MicroMenu and MicroMenu.buttonsToLayout then
+            for i = #MicroMenu.buttonsToLayout, 1, -1 do
+                if MicroMenu.buttonsToLayout[i] == QueueStatusButton then
+                    table.remove(MicroMenu.buttonsToLayout, i)
+                end
             end
         end
+    end
+    RemoveFromMicroMenu()
+
+    -- Hook MicroMenu:Layout to persistently keep QueueStatusButton
+    -- out of the micro menu's layout. Blizzard rebuilds the layout
+    -- on various events (instance entry, queue changes, UI reload)
+    -- which can re-add the button and re-parent it back. After each
+    -- Layout pass, we re-remove it and trigger a deferred relayout
+    -- of our widget so it re-adopts the button into our grid.
+    if MicroMenu and MicroMenu.Layout then
+        hooksecurefunc(MicroMenu, "Layout", function()
+            RemoveFromMicroMenu()
+            -- If Blizzard stole the button back during Layout,
+            -- re-adopt it on the next frame
+            C_Timer.After(0, function()
+                if QueueStatusButton and QueueStatusButton:IsShown() then
+                    widget:LayoutButtons()
+                end
+            end)
+        end)
     end
 
     -- Use SetScale — QueueStatusButton has a child Eye frame at 30×30

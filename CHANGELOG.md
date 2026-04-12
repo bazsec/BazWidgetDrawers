@@ -1,5 +1,11 @@
 # BazDrawer Changelog
 
+## 011 - Minimap Buttons: Centered Grid, Persistent Eye Capture, Eye-First Sort
+### Minimap Buttons Widget
+- **Centered button grid** — the grid now computes how many columns are actually occupied and horizontally centers them within the widget instead of left-aligning from the padding edge. Re-centers dynamically when the queue eye appears or disappears.
+- **Persistent queue eye capture** — hooked `MicroMenu:Layout` to continuously remove `QueueStatusButton` from Blizzard's layout list after every micro menu re-layout. Previously a one-time removal that Blizzard would undo on instance entry, queue changes, and other events. Also forces reparent + re-anchor on every `LayoutButtons` pass unconditionally instead of relying on a parent-check guard.
+- **Queue eye always takes slot 1** — `QueueStatusButton` sorts to the leftmost grid position regardless of the user's custom button order or alphabetical fallback, so the eye is always the first thing you see when it appears.
+
 ## 010 - Code Cleanup
 - Deleted the old monolithic `Widgets/QuestTracker.lua` (1596 lines) that was left in the repo after the v009 modular refactor
 - Removed dead `topHeaderFrame` variable from State.lua and its nil-hide in Init.lua (defined but never created or shown)

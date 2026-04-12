@@ -1,5 +1,11 @@
 # BazDrawer Changelog
 
+## 006 - Developer Guide
+- Added `DEVELOPERS.md` — comprehensive guide for addon authors who want to register their own widgets with BazDrawer
+  - Full reference for the DockableWidget contract (id, label, designWidth, designHeight, frame, and optional hooks)
+  - Sections on design-width scaling, dynamic height, status text, per-widget settings, dock/undock callbacks, taint-safety rules, and standalone fallback pattern
+  - ~100-line Gold Widget reference implementation showing every hook and the full lifecycle from Build to Init
+
 ## 005 - Zone Widget, Queue Eye, Custom Button Order, Zygor Compat
 ### New Widgets
 - **Zone** widget — centered zone text in its own dedicated widget. Auto-colored by PVP status (gold neutral, green friendly, red hostile, orange contested, light blue sanctuary). Updates on all `ZONE_CHANGED*` events.

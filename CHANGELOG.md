@@ -1,5 +1,14 @@
 # BazDrawer Changelog
 
+## 007 - Quest Tracker: Checkmarks, Progress Bars, Quest Item Buttons
+### Quest Tracker
+- **Green checkmarks on completed objectives** — finished quest and achievement objectives now show a green `ui-questtracker-tracker-check` icon in place of the "- " dash prefix, matching Blizzard's default tracker. The check icon is vertically centered on the first line of text and the objective text renders in the dimmed "Complete" color.
+- **Progress bar for percentage-based objectives** — quests with `objectiveType == "progressbar"` (like "Arcana siphoned 88%") now render a proper StatusBar below the objective text, matching the default tracker's blue fill bar. Percentage is sourced from `GetQuestProgressBarPercent(questID)` and displayed as centered text on the bar.
+- **Clickable quest item button** — quests that provide a usable special item (wands, torches, quest tools) now show a clickable item icon on the right edge of the quest title row. Uses Blizzard's own `QuestObjectiveItemButtonTemplate` for the icon frame, cooldown sweep, range indicator, and glow animation. Click calls `UseQuestLogSpecialItem(questLogIndex)`. Title text shrinks to avoid overlapping the item icon.
+- `GetQuestData` now captures `progressBarPct`, `questLogIndex`, `specialItem`, and `specialItemCharges` alongside the existing title/objectives/classification data
+- `CreateBlock` pre-builds a `StatusBar` (progress bar) and a `QuestObjectiveItemButtonTemplate` (item button) per block; both are hidden by default and shown/hidden per-quest in `PopulateBlock`
+- `ReleaseBlock` cleans up both new elements when blocks return to the pool
+
 ## 006 - Developer Guide
 - Added `DEVELOPERS.md` — comprehensive guide for addon authors who want to register their own widgets with BazDrawer
   - Full reference for the DockableWidget contract (id, label, designWidth, designHeight, frame, and optional hooks)

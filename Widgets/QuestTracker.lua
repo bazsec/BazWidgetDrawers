@@ -244,13 +244,51 @@ local function GetQuestData(questID)
     local title = C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(questID) or ""
     local objectives = C_QuestLog.GetQuestObjectives and C_QuestLog.GetQuestObjectives(questID) or {}
     local isComplete = C_QuestLog.IsComplete and C_QuestLog.IsComplete(questID) or false
+
+    -- Progress bar detection. Blizzard's tracker treats any objective
+    -- with `type == "progressbar"` as a percentage rather than a text
+    -- line. If we find one, cache the current percent via
+    -- GetQuestProgressBarPercent (which is only valid while the quest
+    -- is being watched). The block renderer will draw a StatusBar
+    -- below the title instead of a "- X%" text line.
+    local progressBarPct
+    for _, obj in ipairs(objectives) do
+        if obj and obj.type == "progressbar" then
+            if GetQuestProgressBarPercent then
+                local ok, pct = pcall(GetQuestProgressBarPercent, questID)
+                if ok then progressBarPct = pct end
+            end
+            break
+        end
+    end
+
+    -- Quest special item (the clickable icon on the right side of the
+    -- quest title — for quests like "One Elf's Trash" that give you a
+    -- wand to click). GetQuestLogSpecialItemInfo needs a quest log
+    -- index, not a quest ID.
+    local questLogIndex, specialItem, specialItemCharges
+    if C_QuestLog.GetLogIndexForQuestID then
+        questLogIndex = C_QuestLog.GetLogIndexForQuestID(questID)
+    end
+    if questLogIndex and GetQuestLogSpecialItemInfo then
+        local ok, link, item, charges = pcall(GetQuestLogSpecialItemInfo, questLogIndex)
+        if ok and item then
+            specialItem        = item
+            specialItemCharges = charges
+        end
+    end
+
     return {
-        kind           = "quest",
-        id             = questID,
-        title          = title,
-        objectives     = objectives,
-        isComplete     = isComplete,
-        classification = GetQuestClassification(questID),
+        kind               = "quest",
+        id                 = questID,
+        title              = title,
+        objectives         = objectives,
+        isComplete         = isComplete,
+        classification     = GetQuestClassification(questID),
+        progressBarPct     = progressBarPct,
+        questLogIndex      = questLogIndex,
+        specialItem        = specialItem,
+        specialItemCharges = specialItemCharges,
     }
 end
 
@@ -553,6 +591,42 @@ local function CreateBlock()
         end
     end)
 
+    -- Quest item button (the clickable use-item icon on the right edge
+    -- of the quest title, e.g. "Use the Discarded Wand"). Created once
+    -- per block; shown/hidden in PopulateBlock based on whether the
+    -- quest has a special item. Uses Blizzard's own template so the
+    -- frame/glow/cooldown all match the default tracker.
+    local itemOk, itemBtn = pcall(CreateFrame, "Button", nil, block, "QuestObjectiveItemButtonTemplate")
+    if itemOk and itemBtn then
+        itemBtn:SetPoint("RIGHT", block, "RIGHT", 0, 0)
+        itemBtn:SetSize(26, 26)
+        itemBtn:Hide()
+        block.itemButton = itemBtn
+    end
+
+    -- Progress bar (for percentage-based objectives like "Arcana
+    -- siphoned 88%"). A simple StatusBar + background + text label.
+    -- Created once per block; shown/hidden in PopulateBlock.
+    local bar = CreateFrame("StatusBar", nil, block)
+    bar:SetSize(DESIGN_WIDTH - PAD * 2 - OBJ_INDENT - OBJ_RIGHT_PAD, 14)
+    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarColor(0.26, 0.42, 0.75, 1)
+    bar:SetMinMaxValues(0, 100)
+    bar:SetValue(0)
+    bar.bg = bar:CreateTexture(nil, "BACKGROUND")
+    bar.bg:SetAllPoints()
+    bar.bg:SetColorTexture(0.08, 0.08, 0.10, 0.7)
+    bar.text = bar:CreateFontString(nil, "OVERLAY")
+    if _G[OBJECTIVE_FONT] then
+        bar.text:SetFontObject(_G[OBJECTIVE_FONT])
+    else
+        bar.text:SetFontObject("GameFontHighlightSmall")
+    end
+    bar.text:SetPoint("CENTER")
+    bar.text:SetTextColor(1, 1, 1)
+    bar:Hide()
+    block.progressBar = bar
+
     block.objectives = {}  -- pool of FontStrings reused per quest
     return block
 end
@@ -574,6 +648,8 @@ local function ReleaseBlock(block)
     for _, line in ipairs(block.objectives) do
         if line and line.Hide then line:Hide() end
     end
+    if block.progressBar then block.progressBar:Hide() end
+    if block.itemButton then block.itemButton:Hide() end
     table.insert(blockPool, block)
 end
 
@@ -881,26 +957,38 @@ local function PopulateBlock(block, quest)
         -- Position the text and icon based on bullet style
         line.text:ClearAllPoints()
         line.icon:ClearAllPoints()
-        if isScenario then
+        -- Helper: position a check/nub icon and anchor the text to
+        -- its right. Does NOT set line.text width — the caller handles
+        -- that because scenarios have already subtracted icon space
+        -- from objWidth while quests/achievements have not.
+        local function PositionCheckOrNub(atlas)
             line.icon:SetSize(NUB_SIZE, NUB_SIZE)
-            -- Graphical nub bullet on the left, or green check if done.
-            if obj.finished then
-                line.icon:SetAtlas("ui-questtracker-tracker-check", false)
-            else
-                line.icon:SetAtlas("ui-questtracker-objective-nub", false)
-            end
-            -- Pull the per-font pixel height so we can center the icon
-            -- on the FIRST text line (not the middle of the whole frame,
-            -- which would drift downward for two-line boss names).
+            line.icon:SetAtlas(atlas, false)
             local _, fontH = line.text:GetFont()
             fontH = fontH or 12
             line.icon:SetPoint("LEFT", line, "TOPLEFT", 0, -fontH / 2)
             line.icon:Show()
             line.text:SetPoint("TOPLEFT", line, "TOPLEFT", NUB_SIZE + NUB_TEXT_GAP, 0)
+        end
+
+        if isScenario then
+            -- Graphical nub bullet on the left, or green check if done.
+            PositionCheckOrNub(obj.finished
+                and "ui-questtracker-tracker-check"
+                or  "ui-questtracker-objective-nub")
+            -- objWidth already has icon space subtracted (line 880)
             line.text:SetWidth(objWidth)
             line.text:SetText(obj.text or "")
+        elseif obj.finished then
+            -- Completed quest/achievement objective: green check replaces
+            -- the "- " dash prefix, matching the default Blizzard tracker.
+            PositionCheckOrNub("ui-questtracker-tracker-check")
+            -- Must subtract icon space since quest objWidth is full-width
+            line.text:SetWidth(objWidth - NUB_SIZE - NUB_TEXT_GAP)
+            line.text:SetText(obj.text or "")
         else
-            -- Plain "- " text dash, no icon
+            -- Incomplete quest/achievement objective: plain "- " text
+            -- dash, no icon.
             line.icon:Hide()
             line.text:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
             line.text:SetWidth(objWidth)
@@ -914,9 +1002,12 @@ local function PopulateBlock(block, quest)
         end
 
         local lineH = line.text:GetStringHeight() or 12
-        if isScenario and lineH < NUB_SIZE then lineH = NUB_SIZE end
+        -- Lines with an icon (scenario, or completed quest/achievement)
+        -- must be at least as tall as the icon so it doesn't clip.
+        local hasIcon = isScenario or obj.finished
+        if hasIcon and lineH < NUB_SIZE then lineH = NUB_SIZE end
         line:SetHeight(lineH)
-        line:SetWidth(objWidth + (isScenario and (NUB_SIZE + NUB_TEXT_GAP) or 0))
+        line:SetWidth(objWidth + (hasIcon and (NUB_SIZE + NUB_TEXT_GAP) or 0))
         line:Show()
 
         objTotalH = objTotalH + lineH + lineGap
@@ -927,6 +1018,48 @@ local function PopulateBlock(block, quest)
         local stale = block.objectives[i]
         if stale then
             if stale.Hide then stale:Hide() end
+        end
+    end
+
+    -- Progress bar: if the quest has a percentage-based objective,
+    -- show a StatusBar below the last objective line.
+    if block.progressBar then
+        if quest.progressBarPct and not isScenario then
+            local barH = 14
+            block.progressBar:ClearAllPoints()
+            block.progressBar:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT",
+                OBJ_INDENT, -(objTotalH + OBJ_LINE_GAP))
+            block.progressBar:SetValue(quest.progressBarPct)
+            block.progressBar.text:SetText(math.floor(quest.progressBarPct) .. "%")
+            block.progressBar:Show()
+            objTotalH = objTotalH + barH + OBJ_LINE_GAP
+        else
+            block.progressBar:Hide()
+        end
+    end
+
+    -- Quest special item button: if the quest has a usable item (wand,
+    -- torch, quest tool, etc.), show it anchored to the right edge of
+    -- the title row so the user can click it just like in Blizzard's
+    -- default tracker.
+    if block.itemButton then
+        if quest.questLogIndex and quest.specialItem and not isScenario then
+            if block.itemButton.SetUp then
+                block.itemButton:SetUp(quest.questLogIndex)
+            else
+                -- Manual fallback if the mixin's SetUp isn't available
+                SetItemButtonTexture(block.itemButton, quest.specialItem)
+            end
+            block.itemButton:ClearAllPoints()
+            block.itemButton:SetPoint("RIGHT", block.title, "RIGHT", 0, 0)
+            block.itemButton:Show()
+            -- Shrink the title text so it doesn't overlap the item icon
+            local iconW = 26 + 4  -- icon width + padding
+            block.title.text:SetPoint("RIGHT", block.title, "RIGHT", -iconW, 0)
+        else
+            block.itemButton:Hide()
+            -- Restore full-width title text (re-anchored on next
+            -- PopulateBlock call, but keep it clean here).
         end
     end
 

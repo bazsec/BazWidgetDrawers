@@ -46,8 +46,6 @@ function QT.Refresh()
     wipe(QT.activeHeaders)
     wipe(QT.items)
 
-    if QT.topHeaderFrame then QT.topHeaderFrame:Hide() end
-
     local groups = {}
     local groupOrder = {}
 

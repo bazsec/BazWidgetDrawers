@@ -711,9 +711,7 @@ BazCore:QueueForLogin(function()
                     "BazDrawer widget at a fixed scale. The widget " ..
                     "computes its design width based on the minimap's " ..
                     "native size plus a visual padding for the cardinal " ..
-                    "decoration arrows. Disable BazMiniMap (the legacy " ..
-                    "addon) before enabling this widget — both addons " ..
-                    "would otherwise fight over the minimap's parent.",
+                    "decoration arrows that extend past the raw GetWidth.",
                 },
                 {
                     "27. Minimap Buttons Widget",

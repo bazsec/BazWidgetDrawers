@@ -1,5 +1,11 @@
 # BazDrawer Changelog
 
+## 010 - Code Cleanup
+- Deleted the old monolithic `Widgets/QuestTracker.lua` (1596 lines) that was left in the repo after the v009 modular refactor
+- Removed dead `topHeaderFrame` variable from State.lua and its nil-hide in Init.lua (defined but never created or shown)
+- Cleaned stale BazMiniMap supersession comments from Minimap.lua, MinimapInfoBar.lua, and the Settings.lua user manual
+- Verified: no TODO/FIXME markers, no dead functions, no unused variables, no stale colon-call references in the modular QuestTracker files
+
 ## 009 - Quest Tracker Modular Refactor + M+ Challenge Mode Block
 ### Modular Refactor
 - Split the monolithic `Widgets/QuestTracker.lua` (1596 lines) into 11 focused modules under `Widgets/QuestTracker/`:

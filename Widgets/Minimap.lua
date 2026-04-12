@@ -5,13 +5,9 @@
 -- class widget that can be docked (sized by the drawer's widget host)
 -- or floated (Edit Mode draggable on UIParent).
 --
--- At startup the component also hides Blizzard's default MinimapCluster
--- shell — same treatment BazMiniMap does — so the native minimap chrome
--- doesn't occupy screen space alongside the widget.
---
--- Replaces (and supersedes) BazMiniMap/Dock.lua and BazMiniMap/Map.lua.
--- If BazMiniMap is still loaded alongside this widget, you'll get double-
--- reparenting conflicts. Disable BazMiniMap after enabling this widget.
+-- At startup the component hides Blizzard's default MinimapCluster
+-- shell so the native minimap chrome doesn't occupy screen space
+-- alongside the widget.
 
 local addon = BazCore:GetAddon("BazDrawer")
 if not addon then return end
@@ -77,7 +73,7 @@ end
 
 ---------------------------------------------------------------------------
 -- Hide the MinimapCluster shell so it doesn't occupy screen space
--- alongside the reparented Minimap. Same trick BazMiniMap uses.
+-- alongside the reparented Minimap.
 ---------------------------------------------------------------------------
 
 local function HideMinimapCluster()

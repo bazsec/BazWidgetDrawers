@@ -14,7 +14,6 @@ QT.activeHeaders = {}
 
 -- Display state
 QT.items          = {}   -- flat list: { frame, height, gap, kind, topPad }
-QT.topHeaderFrame = nil  -- persistent "All Objectives" bar (unused, kept for future)
 QT.scrollIndex    = 0
 QT._desiredHeight = QT.C.MIN_HEIGHT
 QT._count         = 0

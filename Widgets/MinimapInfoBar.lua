@@ -2,13 +2,8 @@
 --
 -- Horizontal bar that combines the Blizzard clock button, the
 -- calendar/game-time button, and the minimap tracking button.
--- Centered inside the widget so additional info buttons can be added
--- to the left or right later (e.g. bag count, mail, gold, fps/ms).
--- Zone text lives in its own Zone widget now.
---
--- Replaces (and supersedes) BazMiniMap/InfoBar.lua. Like the Minimap
--- widget, disable BazMiniMap after enabling this widget to avoid
--- double-reparenting conflicts.
+-- Zone text lives in its own Zone widget now. Left side is
+-- intentionally empty for future info buttons (bag count, mail, etc.).
 
 local addon = BazCore:GetAddon("BazDrawer")
 if not addon then return end

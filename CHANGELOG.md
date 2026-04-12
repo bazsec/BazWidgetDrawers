@@ -1,5 +1,32 @@
 # BazDrawer Changelog
 
+## 009 - Quest Tracker Modular Refactor + M+ Challenge Mode Block
+### Modular Refactor
+- Split the monolithic `Widgets/QuestTracker.lua` (1596 lines) into 11 focused modules under `Widgets/QuestTracker/`:
+  - **Constants.lua** (61) — layout constants, font refs, color helpers
+  - **State.lua** (24) — shared mutable state (pools, items list, scroll position)
+  - **Collapse.lua** (26) — group collapse state management
+  - **Data.lua** (160) — quest, achievement, and classification data polling
+  - **Scenario.lua** (99) — dungeon/delve/scenario data from C_Scenario APIs
+  - **TomTom.lua** (78) — TomTom waypoint integration
+  - **Headers.lua** (72) — section header creation and pool
+  - **Blocks.lua** (495) — block creation, population (scenario/quest/achievement rendering), pool management
+  - **ChallengeMode.lua** (315) — NEW M+ block (see below)
+  - **Options.lua** (101) — settings panel + Blizzard tracker visibility
+  - **Init.lua** (352) — Build, Init, Refresh, ApplyLayout, Scroll, event registration
+- All modules share state through `addon.QT` — no globals, no circular dependencies, strict TOC load order
+- Zero behavioral changes from the refactor itself — the tracker renders identically to v008
+
+### M+ Challenge Mode Block (NEW)
+- Dedicated frame for Mythic+ dungeon runs, completely separate from the generic scenario block:
+  - **Live countdown timer** — StatusBar driven by `GetWorldElapsedTime()` on a 0.1s OnUpdate tick; color transitions green → yellow → red as time runs out; shows `+MM:SS` overtime in red when depleted
+  - **Keystone level** — displays `+N` in gold next to the dungeon name
+  - **Affix icons** — up to 4 circular icons from `C_ChallengeMode.GetAffixInfo()` with hover tooltips showing affix name and description; masked to circles matching the minimap button style
+  - **Death counter** — graveyard icon + death count from `C_ChallengeMode.GetDeathCount()`; tooltip shows time penalty via `SecondsToClock(timeLost)`
+- Activates automatically when `C_ChallengeMode.IsChallengeModeActive()` returns true; scenario criteria (boss kills) render as a collapsible group below the M+ block
+- Events: `CHALLENGE_MODE_START`, `CHALLENGE_MODE_COMPLETED`, `CHALLENGE_MODE_DEATH_COUNT_UPDATED`, `WORLD_STATE_TIMER_START`, `WORLD_STATE_TIMER_STOP`
+- Cleans up on key completion via `QT.ResetChallengeMode()`
+
 ## 008 - Delve UIWidget Support, Spacing Overhaul
 ### Delve / Scenario Stage Block
 - **UIWidget container** — scenario stage blocks now embed a `UIWidgetContainerTemplate` registered to the step's `widgetSetID` from `C_Scenario.GetStepInfo()`. This renders Blizzard's own Delve-specific widgets (tier badge, death counter, affix icons, map thumbnail) inside the quest tracker, matching the default tracker's Delve stage block. When a `widgetSetID` is present, the decorative atlas + title text are hidden — the widget container replaces them entirely, same pattern as Blizzard's own `ScenarioObjectiveTrackerStageMixin:UpdateWidgetRegistration`.

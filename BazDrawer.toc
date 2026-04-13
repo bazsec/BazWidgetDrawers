@@ -9,6 +9,7 @@
 ## X-Website: https://www.curseforge.com/wow/addons/bazdrawer
 ## X-Curse-Project-ID: 1511379
 ## Dependencies: BazCore
+## OptionalDeps: LibBazWidget-1.0
 ## IconTexture: 7416769
 ## SavedVariables: BazDrawerDB
 

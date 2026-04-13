@@ -64,7 +64,11 @@ function WidgetHost:Initialize(parent)
     self.parent = parent
     self.slots = {}  -- { [id] = slotFrame }
 
-    if BazCore.RegisterDockableWidgetCallback then
+    -- Prefer LibBazWidget-1.0 directly when available; fall back to BazCore shim
+    local LBW = LibStub and LibStub("LibBazWidget-1.0", true)
+    if LBW then
+        LBW:RegisterCallback(function() self:Reflow() end)
+    elseif BazCore.RegisterDockableWidgetCallback then
         BazCore:RegisterDockableWidgetCallback(function()
             self:Reflow()
         end)

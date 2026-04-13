@@ -1,5 +1,19 @@
 # BazDrawer Changelog
 
+## 016 - Micro Menu Widget, Widget Pack Split, Nudge Controls
+### Widget Pack Split
+- **Moved Repair and Dungeon Finder widgets to BazWidgets** — a new standalone widget pack addon. BazDrawer now ships only core/demo widgets (Quest Tracker, Minimap, Minimap Buttons, Minimap Info Bar, Zone Text, Micro Menu). Community widgets and utility widgets live in BazWidgets, which serves as both a useful widget collection and a reference implementation for third-party widget pack authors.
+
+### New Widget: Micro Menu
+- Reparents Blizzard's `MicroMenu` (the button row only, not the oversized container that includes eye space) into the drawer or as a floating widget
+- Scales button row to fill the widget width automatically
+- Hides the empty `MicroMenuContainer` and its Edit Mode `Selection` highlight off-screen
+- **Fade When Not Hovered** toggle — fully transparent at rest, fades in on hover, fades back out on leave; auto-visible during Edit Mode so the highlight is always usable
+- **Hide Bags Bar** toggle (default on) — hides Blizzard's floating bag buttons bar
+
+### All Floating Widgets
+- **Nudge controls** — every floating widget's Edit Mode popup now includes pixel-precise nudge buttons (Left/Right/Up/Down) via BazCore's `{ type = "nudge" }` setting, added automatically in `BuildEditModeConfig`
+
 ## 015 - Zygor Waypoint Integration, Waypoints Module Rename
 - **Zygor waypoint integration** — when Zygor Guides is installed, super-tracking a quest now sets Zygor's navigation arrow to the quest's next objective via `ZGV.Pointer:SetWaypoint(mapID, x, y, { title, arrow=true, findpath=true, type="manual" })`. Independently toggleable in Quest Tracker → Integrations → Zygor Waypoint. Greyed out when Zygor isn't installed. Fires alongside TomTom (both can run simultaneously).
 - **Renamed `TomTom.lua` → `Waypoints.lua`** — the file now handles both TomTom and Zygor integrations, so the old name was misleading. `ResolveQuestWaypoint` promoted from local function to `QT.ResolveQuestWaypoint` so both integrations share the same waypoint resolution logic.

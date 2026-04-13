@@ -185,6 +185,10 @@ local function BuildEditModeConfig(widget)
         return (a.opt.order or 100) < (b.opt.order or 100)
     end)
 
+    -- Always include nudge controls so every floating widget can be
+    -- pixel-positioned via the Edit Mode popup
+    table.insert(settings, { type = "nudge" })
+
     for _, entry in ipairs(sorted) do
         local key, opt = entry.key, entry.opt
 

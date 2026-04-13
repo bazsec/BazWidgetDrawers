@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/bazsec/BazDrawer/master/logo.png" alt="BazDrawer Logo" width="300"/>
+  <img src="https://raw.githubusercontent.com/bazsec/BazWidgetDrawers/master/logo.png" alt="BazWidgetDrawers Logo" width="300"/>
 </p>
 
-<h1 align="center">BazDrawer</h1>
+<h1 align="center">BazWidgetDrawers</h1>
 
 <p align="center">
   <strong>Slide-out side drawer for World of Warcraft</strong><br/>
@@ -12,24 +12,24 @@
 <p align="center">
   <img src="https://img.shields.io/badge/WoW-12.0%20Midnight-blue" alt="WoW Version"/>
   <img src="https://img.shields.io/badge/License-GPL%20v2-green" alt="License"/>
-  <img src="https://img.shields.io/github/v/tag/bazsec/BazDrawer?label=Version&color=orange" alt="Version"/>
+  <img src="https://img.shields.io/github/v/tag/bazsec/BazWidgetDrawers?label=Version&color=orange" alt="Version"/>
 </p>
 
 > **Requires [BazCore](https://www.curseforge.com/wow/addons/bazcore)**
-> BazDrawer depends on the BazCore framework addon. If you use the CurseForge app, it will be installed automatically. Manual users must install BazCore separately.
+> BazWidgetDrawers depends on the BazCore framework addon. If you use the CurseForge app, it will be installed automatically. Manual users must install BazCore separately.
 
 ---
 
-## What is BazDrawer?
+## What is BazWidgetDrawers?
 
-BazDrawer is a full-height slide-out panel that docks to either the left or right edge of your screen and hosts a vertical stack of widgets. It ships with a Quest Tracker (which replaces Blizzard's default objective tracker), a Repair widget, a Minimap widget that reparents the real Blizzard minimap, a Minimap Info Bar (zone text, clock, calendar, and tracking), and a Minimap Buttons collector that adopts LibDBIcon buttons from other addons.
+BazWidgetDrawers is a full-height slide-out panel that docks to either the left or right edge of your screen and hosts a vertical stack of widgets. It ships with a Quest Tracker (which replaces Blizzard's default objective tracker), a Repair widget, a Minimap widget that reparents the real Blizzard minimap, a Minimap Info Bar (zone text, clock, calendar, and tracking), and a Minimap Buttons collector that adopts LibDBIcon buttons from other addons.
 
-The drawer fades down to a discreet outline when you're not using it and pops back to full opacity on hover, so it stays out of the way during gameplay but is always one mouseover away. Other Baz Suite addons (and your own addons) can register their own widgets via the BazCore Dockable Widget API and they'll appear inside BazDrawer automatically.
+The drawer fades down to a discreet outline when you're not using it and pops back to full opacity on hover, so it stays out of the way during gameplay but is always one mouseover away. Other Baz Suite addons (and your own addons) can register their own widgets via the BazCore Dockable Widget API and they'll appear inside BazWidgetDrawers automatically.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/bazsec/BazDrawer/master/screenshot.png" alt="BazDrawer Screenshot" width="800"/>
+  <img src="https://raw.githubusercontent.com/bazsec/BazWidgetDrawers/master/screenshot.png" alt="BazWidgetDrawers Screenshot" width="800"/>
   <br/>
-  <em>The full BazDrawer stack — Info Bar, Minimap, Minimap Buttons, and Quest Tracker.</em>
+  <em>The full BazWidgetDrawers stack — Info Bar, Minimap, Minimap Buttons, and Quest Tracker.</em>
 </p>
 
 ---
@@ -104,12 +104,12 @@ Plus item-level pagination (no half-cut quests when scrolling), TomTom waypoint 
 ## Installation
 
 ### CurseForge / WoW Addon Manager
-Search for **BazDrawer** in your addon manager of choice. BazCore will be installed automatically as a dependency.
+Search for **BazWidgetDrawers** in your addon manager of choice. BazCore will be installed automatically as a dependency.
 
 ### Manual Installation
 1. Install [BazCore](https://www.curseforge.com/wow/addons/bazcore) first
-2. Download the latest BazDrawer release
-3. Extract to `World of Warcraft/_retail_/Interface/AddOns/BazDrawer/`
+2. Download the latest BazWidgetDrawers release
+3. Extract to `World of Warcraft/_retail_/Interface/AddOns/BazWidgetDrawers/`
 4. Restart WoW or `/reload`
 
 ---
@@ -153,13 +153,13 @@ BazCore:RegisterDockableWidget({
 })
 ```
 
-The widget appears inside BazDrawer automatically. See the BazCore developer reference for the full contract.
+The widget appears inside BazWidgetDrawers automatically. See the BazCore developer reference for the full contract.
 
 ---
 
 ## License
 
-BazDrawer is licensed under the [GNU General Public License v2](LICENSE) (GPL v2).
+BazWidgetDrawers is licensed under the [GNU General Public License v2](LICENSE) (GPL v2).
 
 ---
 

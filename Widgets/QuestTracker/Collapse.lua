@@ -1,7 +1,7 @@
 -- QuestTracker: Group Collapse State
 -- Per-group collapse tracking, persisted via widgetSettings.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C

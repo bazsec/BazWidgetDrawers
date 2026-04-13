@@ -1,11 +1,11 @@
--- BazDrawer Widget: Minimap Info Bar
+-- BazWidgetDrawers Widget: Minimap Info Bar
 --
 -- Horizontal bar that combines the Blizzard clock button, the
 -- calendar/game-time button, and the minimap tracking button.
 -- Zone text lives in its own Zone widget now. Left side is
 -- intentionally empty for future info buttons (bag count, mail, etc.).
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID     = "bazdrawer_minimap_infobar"
@@ -182,7 +182,7 @@ end
 function InfoBarWidget:Init()
     if wrapper then return end
 
-    wrapper = CreateFrame("Frame", "BazDrawerMinimapInfoBarWrapper", UIParent)
+    wrapper = CreateFrame("Frame", "BazWidgetDrawersMinimapInfoBarWrapper", UIParent)
     wrapper:SetSize(DESIGN_WIDTH, DESIGN_HEIGHT)
 
     widgetInfo = {

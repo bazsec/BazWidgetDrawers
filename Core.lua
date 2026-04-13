@@ -1,16 +1,16 @@
--- BazDrawer Core
+-- BazWidgetDrawers Core
 -- Addon lifecycle via BazCore framework
 --
--- BazDrawer is a slide-out side panel host that other Baz Suite addons
--- can dock widgets into. The visual style mirrors Blizzard's Compact
--- Raid Frame Manager so it feels like a native game UI element.
+-- BazWidgetDrawers is a slide-out side panel host that other Baz Suite
+-- addons can dock widgets into. The visual style mirrors Blizzard's
+-- Compact Raid Frame Manager so it feels like a native game UI element.
 
-local ADDON_NAME = "BazDrawer"
+local ADDON_NAME = "BazWidgetDrawers"
 
 local addon
 addon = BazCore:RegisterAddon(ADDON_NAME, {
-    title = "BazDrawer",
-    savedVariable = "BazDrawerDB",
+    title = "BazWidgetDrawers",
+    savedVariable = "BazWidgetDrawersDB",
     profiles = true,
     defaults = {
         collapsed = false,
@@ -43,7 +43,7 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
         locked = false,
     },
 
-    slash = { "/bdrawer", "/bd" },
+    slash = { "/bwd", "/bd" },
     commands = {
         toggle = {
             desc = "Toggle the drawer open/closed",
@@ -66,11 +66,24 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
     },
 
     minimap = {
-        label = "BazDrawer",
+        label = "BazWidgetDrawers",
         icon = 7416769,  -- Suramar Dresser (FileDataID)
     },
 
     onReady = function(self)
+        -- One-time migration: BazDrawer → BazWidgetDrawers
+        if BazCoreDB and BazCoreDB.profiles then
+            for profileName, profileData in pairs(BazCoreDB.profiles) do
+                if profileData["BazDrawer"] and not profileData["BazWidgetDrawers"] then
+                    profileData["BazWidgetDrawers"] = profileData["BazDrawer"]
+                    profileData["BazDrawer"] = nil
+                end
+            end
+        end
+        if BazDrawerDB and not BazWidgetDrawersDB then
+            BazWidgetDrawersDB = BazDrawerDB
+        end
+
         self:SetupDrawer()
     end,
 })
@@ -173,7 +186,7 @@ end
 ---------------------------------------------------------------------------
 -- Generic per-widget settings store. Widgets that need their own
 -- persistent options read/write through here instead of maintaining
--- their own SavedVariables, so everything lives in BazDrawer's profile.
+-- their own SavedVariables, so everything lives in BazWidgetDrawers' profile.
 ---------------------------------------------------------------------------
 
 function addon:GetWidgetSetting(widgetId, key, default)

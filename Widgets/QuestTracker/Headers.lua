@@ -2,7 +2,7 @@
 -- Creates and pools the collapsible group headers (Campaign, Quests,
 -- Achievements, Dungeon, etc.) with Blizzard's ornamental atlas.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C

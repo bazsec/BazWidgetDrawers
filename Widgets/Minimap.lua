@@ -1,7 +1,7 @@
--- BazDrawer Widget: Minimap
+-- BazWidgetDrawers Widget: Minimap
 --
 -- Reparents the real Minimap into a wrapper frame and registers that
--- wrapper as a dockable BazDrawer widget. The Minimap becomes a first-
+-- wrapper as a dockable BazWidgetDrawers widget. The Minimap becomes a first-
 -- class widget that can be docked (sized by the drawer's widget host)
 -- or floated (Edit Mode draggable on UIParent).
 --
@@ -9,7 +9,7 @@
 -- shell so the native minimap chrome doesn't occupy screen space
 -- alongside the widget.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID    = "bazdrawer_minimap"
@@ -109,7 +109,7 @@ function MinimapWidget:Init()
     local wrapperW = mapW + VISUAL_PAD * 2
     local wrapperH = mapH + VISUAL_PAD * 2
 
-    wrapper = CreateFrame("Frame", "BazDrawerMinimapWrapper", UIParent)
+    wrapper = CreateFrame("Frame", "BazWidgetDrawersMinimapWrapper", UIParent)
     wrapper:SetSize(wrapperW, wrapperH)
 
     widgetInfo = {

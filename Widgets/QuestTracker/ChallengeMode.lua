@@ -14,7 +14,7 @@
 --   GetWorldElapsedTimerInfo(timerID) → returns elapsed, type
 --   GetWorldElapsedTime(timerID) → elapsed seconds
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C

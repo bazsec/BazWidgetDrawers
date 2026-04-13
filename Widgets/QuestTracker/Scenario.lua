@@ -2,7 +2,7 @@
 -- Reads C_Scenario / C_ScenarioInfo to build a quest-shaped data table
 -- for dungeon boss lists, Delve objectives, M+ criteria, etc.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 

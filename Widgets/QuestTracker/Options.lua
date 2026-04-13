@@ -1,7 +1,7 @@
 -- QuestTracker: Options & Blizzard Tracker Visibility
--- Per-widget settings exposed in BazDrawer → Widgets → Quest Tracker.
+-- Per-widget settings exposed in BazWidgetDrawers → Widgets → Quest Tracker.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C

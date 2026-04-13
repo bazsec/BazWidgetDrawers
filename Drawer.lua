@@ -1,10 +1,10 @@
--- BazDrawer: Drawer frame
+-- BazWidgetDrawers: Drawer frame
 -- Full-height slide-out side panel. The tab handle hangs outside the
 -- drawer's inner edge so that when the drawer is fully slid off-screen,
 -- only the handle remains visible. Backdrop uses a standard tooltip
 -- border so it scales cleanly at any height.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 
 local Drawer = {}
 addon.Drawer = Drawer
@@ -99,7 +99,7 @@ end
 function Drawer:Build()
     if self.frame then return self.frame end
 
-    local f = CreateFrame("Frame", "BazDrawerFrame", UIParent, "BackdropTemplate")
+    local f = CreateFrame("Frame", "BazWidgetDrawersFrame", UIParent, "BackdropTemplate")
     f:SetWidth(GetWidth())
     f:SetFrameStrata("MEDIUM")
     f:SetToplevel(true)
@@ -122,7 +122,7 @@ function Drawer:Build()
     f:SetBackdropBorderColor(1, 1, 1, 1)
 
     -- Display frame — holds all content (hidden when collapsed)
-    local display = CreateFrame("Frame", "BazDrawerDisplayFrame", f)
+    local display = CreateFrame("Frame", "BazWidgetDrawersDisplayFrame", f)
     display:SetPoint("TOPLEFT", 8, -8)
     display:SetPoint("BOTTOMRIGHT", -8, 8)
     f.displayFrame = display
@@ -172,7 +172,7 @@ function Drawer:Build()
     display.infoButton:SetPoint("RIGHT", display.lockButton, "LEFT", -4, 0)
     display.infoButton:SetScript("OnClick", function()
         if BazCore.OpenOptionsPanel then
-            BazCore:OpenOptionsPanel("BazDrawer")
+            BazCore:OpenOptionsPanel("BazWidgetDrawers")
         end
     end)
 
@@ -183,7 +183,7 @@ function Drawer:Build()
 
     -- Widget host — takes the full top area, leaves room for the chrome
     -- group at the bottom.
-    local host = CreateFrame("Frame", "BazDrawerWidgetHost", display)
+    local host = CreateFrame("Frame", "BazWidgetDrawersWidgetHost", display)
     host:SetPoint("TOPLEFT", 4, -4)
     host:SetPoint("BOTTOMRIGHT", -4, 34)
     f.widgetHost = host
@@ -193,7 +193,7 @@ function Drawer:Build()
     end
 
     -- Toggle tab (single custom button matching the drawer's tooltip chrome)
-    f.toggleButton = self:BuildToggleButton("BazDrawerToggleButton", f)
+    f.toggleButton = self:BuildToggleButton("BazWidgetDrawersToggleButton", f)
 
     -- Keep drawer sized to screen height on display changes
     f:RegisterEvent("DISPLAY_SIZE_CHANGED")
@@ -433,7 +433,7 @@ end
 
 function Drawer:SetupEdgeHotZone()
     if self._edgeHotZone then return end
-    local hz = CreateFrame("Frame", "BazDrawerEdgeHotZone", UIParent)
+    local hz = CreateFrame("Frame", "BazWidgetDrawersEdgeHotZone", UIParent)
     hz:SetFrameStrata("BACKGROUND")
 
     -- Motion-only so clicks pass through to the game world

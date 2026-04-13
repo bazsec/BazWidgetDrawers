@@ -1,11 +1,11 @@
--- BazDrawer Widget: Micro Menu
+-- BazWidgetDrawers Widget: Micro Menu
 --
 -- Reparents Blizzard's MicroMenuContainer into the drawer so the
 -- micro menu buttons (character, spellbook, talents, collections,
--- LFG, achievements, shop, etc.) live inside BazDrawer instead of
+-- LFG, achievements, shop, etc.) live inside BazWidgetDrawers instead of
 -- floating at the bottom of the screen.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID    = "bazdrawer_micromenu"
@@ -221,7 +221,7 @@ function MicroMenuWidget:Init()
         if w and w > 0 then menuW = w + PAD * 2 end
     end
 
-    wrapper = CreateFrame("Frame", "BazDrawerMicroMenuWrapper", UIParent)
+    wrapper = CreateFrame("Frame", "BazWidgetDrawersMicroMenuWrapper", UIParent)
     wrapper:SetSize(menuW, DESIGN_HEIGHT + PAD * 2)
 
     BazCore:RegisterDockableWidget({

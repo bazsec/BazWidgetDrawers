@@ -1,9 +1,9 @@
--- BazDrawer Settings
+-- BazWidgetDrawers Settings
 -- Landing page + Settings subcategory + Widgets subcategory.
 -- The Widgets subcategory uses BazCore's list/detail options pattern
 -- (same shape BazBars uses for per-bar options).
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 
 ---------------------------------------------------------------------------
 -- General settings (side + width + toggle)
@@ -325,7 +325,7 @@ end
 ---------------------------------------------------------------------------
 
 local function GetGlobalOptionsTable()
-    return BazCore:CreateGlobalOptionsPage("BazDrawer", {
+    return BazCore:CreateGlobalOptionsPage("BazWidgetDrawers", {
         getOverrides = function() return addon:GetGlobalOverrides() end,
         setOverride = function(key, field, value)
             addon:SetGlobalOverride(key, field, value)
@@ -342,7 +342,7 @@ end
 ---------------------------------------------------------------------------
 
 local function GetModulesOptionsTable()
-    return BazCore:CreateModulesPage("BazDrawer", {
+    return BazCore:CreateModulesPage("BazWidgetDrawers", {
         description = "Enable or disable widgets. Disabled widgets are hidden entirely — not docked in the drawer, not floating, not visible anywhere. Re-enable to restore.",
         getModules = function()
             local list = {}
@@ -371,12 +371,12 @@ BazCore:QueueForLogin(function()
     if not BazCore.RegisterOptionsTable then return end
 
     -- Landing page (user manual)
-    BazCore:RegisterOptionsTable("BazDrawer", function()
-        return BazCore:CreateLandingPage("BazDrawer", {
+    BazCore:RegisterOptionsTable("BazWidgetDrawers", function()
+        return BazCore:CreateLandingPage("BazWidgetDrawers", {
             subtitle = "Slide-out side drawer for Baz Suite widgets",
 
             description =
-                "BazDrawer is a full-height slide-out panel that docks " ..
+                "BazWidgetDrawers is a full-height slide-out panel that docks " ..
                 "to either the left or right edge of your screen and " ..
                 "hosts a vertical stack of widgets. Out of the box it " ..
                 "ships with a Quest Tracker (replaces Blizzard's default " ..
@@ -399,7 +399,7 @@ BazCore:QueueForLogin(function()
 
                 "Other Baz Suite addons (and your own addons) can " ..
                 "register their own widgets via the BazCore Dockable " ..
-                "Widget API and they'll appear inside BazDrawer " ..
+                "Widget API and they'll appear inside BazWidgetDrawers " ..
                 "automatically with no further wiring.",
 
             features =
@@ -435,7 +435,7 @@ BazCore:QueueForLogin(function()
                 "• Minimap Info Bar — zone text, scaled clock, day-of-month calendar (proxy for GameTimeFrame), and the native tracking dropdown in one bar.\n\n" ..
 
                 "DEVELOPER\n" ..
-                "• BazCore DockableWidget API — register a widget from any Baz Suite addon and it appears in BazDrawer automatically.\n" ..
+                "• BazCore DockableWidget API — register a widget from any Baz Suite addon and it appears in BazWidgetDrawers automatically.\n" ..
                 "• Standard BazCore landing page, settings, modules, global options, widgets, and profiles subcategories.",
 
             guide = {
@@ -466,7 +466,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "3. Choosing a Side",
-                    "BazDrawer → Settings → Layout → Side switches the " ..
+                    "BazWidgetDrawers → Settings → Layout → Side switches the " ..
                     "drawer between the left and right edge of your screen. " ..
                     "The pull-tab atlas, the slide direction, and the edge " ..
                     "hot zone all flip together automatically. If you " ..
@@ -476,7 +476,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "4. Choosing a Width",
-                    "BazDrawer → Settings → Layout → Width is a slider " ..
+                    "BazWidgetDrawers → Settings → Layout → Width is a slider " ..
                     "between 120 and 400 pixels. Every docked widget " ..
                     "declares a 'design width' it was built for, and the " ..
                     "host computes a uniform scale factor (drawer width " ..
@@ -490,7 +490,7 @@ BazCore:QueueForLogin(function()
                 ----------------------------------------------------------------
                 {
                     "5. How Fading Works",
-                    "BazDrawer fades the drawer chrome — backdrop, border, " ..
+                    "BazWidgetDrawers fades the drawer chrome — backdrop, border, " ..
                     "tab, and the bottom title bar elements (label, " ..
                     "count, info button) — as a single unit. Docked widget " ..
                     "content always stays at full opacity so quest text, " ..
@@ -501,7 +501,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "6. Tuning the Fade",
-                    "BazDrawer → Settings → Fading exposes the controls. " ..
+                    "BazWidgetDrawers → Settings → Fading exposes the controls. " ..
                     "Enable Fade is the master switch. Faded Opacity is the " ..
                     "alpha the chrome fades down to (0 = invisible, 1 = no " ..
                     "fade). Fade Delay is the seconds between losing hover " ..
@@ -565,7 +565,7 @@ BazCore:QueueForLogin(function()
                 ----------------------------------------------------------------
                 {
                     "12. Enabling and Disabling Widgets",
-                    "BazDrawer → Modules lists every registered widget " ..
+                    "BazWidgetDrawers → Modules lists every registered widget " ..
                     "with an on/off toggle. Disabling a widget unregisters " ..
                     "its docking slot entirely (the slot disappears, the " ..
                     "drawer reflows to fill the gap, and any per-widget " ..
@@ -576,7 +576,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "13. Reordering Widgets",
-                    "BazDrawer → Widgets opens a list of every widget with " ..
+                    "BazWidgetDrawers → Widgets opens a list of every widget with " ..
                     "Move Up and Move Down buttons on each. Reordering is " ..
                     "instant: the drawer reflows the slot stack as soon " ..
                     "as you click. The order is persisted per-character " ..
@@ -584,7 +584,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "14. Per-Widget Settings",
-                    "Each widget has its own page under BazDrawer → " ..
+                    "Each widget has its own page under BazWidgetDrawers → " ..
                     "Widgets → [Widget Name]. The page includes the " ..
                     "Floating toggle, Move Up/Down, and any options the " ..
                     "widget exposes via its GetOptionsArgs hook. Examples: " ..
@@ -595,7 +595,7 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "15. Global Options",
-                    "BazDrawer → Global Options is the place to set " ..
+                    "BazWidgetDrawers → Global Options is the place to set " ..
                     "defaults that apply to all widgets at once. Each " ..
                     "global override has an enable toggle plus a value " ..
                     "widget — when enabled, that key's global value " ..
@@ -631,7 +631,7 @@ BazCore:QueueForLogin(function()
                 {
                     "18. Quest Tracker",
                     "Quest Tracker replicates Blizzard's default objective " ..
-                    "tracker as a BazDrawer widget. It's pure read-only " ..
+                    "tracker as a BazWidgetDrawers widget. It's pure read-only " ..
                     "polling of the C_QuestLog API, so it's taint-safe " ..
                     "even when reparented or floated. Tracked quests are " ..
                     "binned into sections (Dungeon/Scenario, Campaign, " ..
@@ -708,7 +708,7 @@ BazCore:QueueForLogin(function()
                 {
                     "26. Minimap Widget",
                     "Minimap reparents the real Blizzard minimap into a " ..
-                    "BazDrawer widget at a fixed scale. The widget " ..
+                    "BazWidgetDrawers widget at a fixed scale. The widget " ..
                     "computes its design width based on the minimap's " ..
                     "native size plus a visual padding for the cardinal " ..
                     "decoration arrows that extend past the raw GetWidth.",
@@ -751,10 +751,10 @@ BazCore:QueueForLogin(function()
                 },
                 {
                     "30. Profiles",
-                    "BazDrawer → Profiles is the standard BazCore profile " ..
+                    "BazWidgetDrawers → Profiles is the standard BazCore profile " ..
                     "subcategory. Use it to copy/share/reset settings, " ..
                     "make a per-character or per-spec profile, and export/" ..
-                    "import via the BazCore profile manager. All BazDrawer " ..
+                    "import via the BazCore profile manager. All BazWidgetDrawers " ..
                     "settings (including widget order, collapsed states, " ..
                     "per-widget options, and global overrides) live inside " ..
                     "the active profile.",
@@ -765,7 +765,7 @@ BazCore:QueueForLogin(function()
                     "id, label, designWidth, designHeight, frame, " ..
                     "GetDesiredHeight, GetStatusText, GetOptionsArgs, " ..
                     "OnDock, OnUndock }) and the widget will appear inside " ..
-                    "BazDrawer automatically. The widget contract is " ..
+                    "BazWidgetDrawers automatically. The widget contract is " ..
                     "documented in BazCore's developer reference. Make " ..
                     "sure your widget polls game state read-only — never " ..
                     "reparent secure (protected) frames into the drawer " ..
@@ -791,21 +791,21 @@ BazCore:QueueForLogin(function()
             },
         })
     end)
-    BazCore:AddToSettings("BazDrawer", "BazDrawer")
+    BazCore:AddToSettings("BazWidgetDrawers", "BazWidgetDrawers")
 
     -- Settings subcategory
-    BazCore:RegisterOptionsTable("BazDrawer-Settings", GetSettingsOptionsTable)
-    BazCore:AddToSettings("BazDrawer-Settings", "Settings", "BazDrawer")
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-Settings", GetSettingsOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-Settings", "Settings", "BazWidgetDrawers")
 
     -- Global Options subcategory (per-key overrides across all widgets)
-    BazCore:RegisterOptionsTable("BazDrawer-GlobalOptions", GetGlobalOptionsTable)
-    BazCore:AddToSettings("BazDrawer-GlobalOptions", "Global Options", "BazDrawer")
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-GlobalOptions", GetGlobalOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-GlobalOptions", "Global Options", "BazWidgetDrawers")
 
     -- Modules subcategory (flat enable/disable toggles, built by BazCore)
-    BazCore:RegisterOptionsTable("BazDrawer-Modules", GetModulesOptionsTable)
-    BazCore:AddToSettings("BazDrawer-Modules", "Modules", "BazDrawer")
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-Modules", GetModulesOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-Modules", "Modules", "BazWidgetDrawers")
 
     -- Widgets subcategory (list/detail — same shape as BazBars' Bar Options)
-    BazCore:RegisterOptionsTable("BazDrawer-Widgets", GetWidgetsOptionsTable)
-    BazCore:AddToSettings("BazDrawer-Widgets", "Widgets", "BazDrawer")
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-Widgets", GetWidgetsOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-Widgets", "Widgets", "BazWidgetDrawers")
 end)

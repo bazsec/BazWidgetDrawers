@@ -1,4 +1,6 @@
-# BazDrawer Changelog
+# BazWidgetDrawers Changelog
+
+> Renamed from BazDrawer to BazWidgetDrawers in v016. Settings are migrated automatically.
 
 ## 016 - Micro Menu Widget, Widget Pack Split, Nudge Controls
 ### Widget Pack Split

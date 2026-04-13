@@ -4,7 +4,7 @@
 -- independently toggleable via the Quest Tracker's Integrations
 -- settings. Silent no-op when the addon isn't installed.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C
@@ -63,7 +63,7 @@ function QT.SetTomTomForQuest(questID)
 
     local ok, uid = pcall(_G.TomTom.AddWaypoint, _G.TomTom, mapID, x, y, {
         title       = title,
-        from        = "BazDrawer",
+        from        = "BazWidgetDrawers",
         silent      = true,
         persistent  = false,
         minimap     = true,

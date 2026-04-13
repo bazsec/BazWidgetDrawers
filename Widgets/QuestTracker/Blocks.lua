@@ -2,7 +2,7 @@
 -- Creates quest/scenario/achievement block frames, renders data into
 -- them via PopulateBlock, and manages the block acquisition/release pool.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C

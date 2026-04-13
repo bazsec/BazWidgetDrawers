@@ -1,4 +1,4 @@
--- BazDrawer: WidgetHost
+-- BazWidgetDrawers: WidgetHost
 --
 -- Owns the vertical slot layout inside the drawer's display frame.
 -- Listens to BazCore's DockableWidget registry and reflows whenever
@@ -28,7 +28,7 @@
 --   widget:OnDock(host)       optional — called when parented
 --   widget:OnUndock()         optional — called when removed
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 
 local WidgetHost = {}
 addon.WidgetHost = WidgetHost
@@ -265,14 +265,14 @@ function WidgetHost:FloatWidget(widget)
             label = "Open Full Settings",
             callback = function()
                 if BazCore.OpenOptionsPanel then
-                    BazCore:OpenOptionsPanel("BazDrawer")
+                    BazCore:OpenOptionsPanel("BazWidgetDrawers")
                 end
             end,
         })
 
         BazCore:RegisterEditModeFrame(f, {
             label = widget.label or id,
-            addonName = "BazDrawer",
+            addonName = "BazWidgetDrawers",
             positionKey = false,
             onPositionChanged = function()
                 local point, _, relPoint, x, y = f:GetPoint()

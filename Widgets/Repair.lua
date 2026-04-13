@@ -1,4 +1,4 @@
--- BazDrawer Widget: Repair
+-- BazWidgetDrawers Widget: Repair
 --
 -- Paper-doll mini view + list of damaged equipment slots with their
 -- current durability percentage. Click the widget to open the character
@@ -9,7 +9,7 @@
 -- on the left and the overall durability % on the right via
 -- GetStatusText, so the widget itself draws only its content area.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local DESIGN_WIDTH  = 220
@@ -79,7 +79,7 @@ local NOOP = function() end
 -- replacing DurabilityFrame.Show with Hide tainted the frame's method
 -- table, which propagated through UIParentRightManagedFrameContainer
 -- to UnitFrame health bars and caused "secret number tainted by
--- BazDrawer" errors. hooksecurefunc preserves the original secure
+-- BazWidgetDrawers" errors. hooksecurefunc preserves the original secure
 -- method so no taint is introduced.
 ---------------------------------------------------------------------------
 
@@ -294,7 +294,7 @@ function RepairWidget:GetStatusText()
     return string.format("%d%%", math.floor(avg * 100 + 0.5)), r, g, b
 end
 
--- Options exposed in the BazDrawer → Widgets → Repair page
+-- Options exposed in the BazWidgetDrawers → Widgets → Repair page
 function RepairWidget:GetOptionsArgs()
     return {
         appearanceHeader = {
@@ -356,7 +356,7 @@ function RepairWidget:Build()
     self._desiredHeight = initialHeight
     self._avgPct = 1.0
 
-    local f = CreateFrame("Button", "BazDrawerRepairWidget", UIParent)
+    local f = CreateFrame("Button", "BazWidgetDrawersRepairWidget", UIParent)
     f:SetSize(DESIGN_WIDTH, initialHeight)
     f:RegisterForClicks("LeftButtonUp")
     f:SetScript("OnClick", function() ToggleCharacter("PaperDollFrame") end)

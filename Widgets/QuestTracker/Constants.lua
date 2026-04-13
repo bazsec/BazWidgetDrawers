@@ -1,7 +1,7 @@
 -- QuestTracker: Constants & Color Helpers
 -- Shared layout constants, font references, and Blizzard color lookups.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 -- Create the shared QuestTracker namespace

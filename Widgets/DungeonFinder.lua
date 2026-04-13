@@ -1,12 +1,12 @@
--- BazDrawer Widget: Dungeon Finder
+-- BazWidgetDrawers Widget: Dungeon Finder
 --
 -- Queue status panel showing role fills, wait time, queue timer, and
 -- dungeon name. Auto-shows when queued via LFG, auto-hides when not.
 -- Replaces the standalone BazDungeonFinder addon's bar with a dockable
--- BazDrawer widget. Includes all queue data polling inline so no
+-- BazWidgetDrawers widget. Includes all queue data polling inline so no
 -- external addon dependency is needed.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID     = "bazdrawer_dungeonfinder"
@@ -139,7 +139,7 @@ local frame
 function DFWidget:Build()
     if frame then return frame end
 
-    local f = CreateFrame("Frame", "BazDrawerDungeonFinderWidget", UIParent)
+    local f = CreateFrame("Frame", "BazWidgetDrawersDungeonFinderWidget", UIParent)
     f:SetSize(DESIGN_WIDTH, DESIGN_HEIGHT)
     frame = f
 

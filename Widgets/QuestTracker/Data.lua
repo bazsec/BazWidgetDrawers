@@ -2,7 +2,7 @@
 -- Quest, achievement, and classification data polling. Pure read-only
 -- API calls — no frame creation or visual work.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 

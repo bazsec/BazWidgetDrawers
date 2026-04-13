@@ -2,7 +2,7 @@
 -- Single source of truth for all cross-file state (pools, items list,
 -- scroll position, frame refs). Initialized once at file load.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 

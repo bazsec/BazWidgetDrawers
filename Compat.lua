@@ -1,12 +1,12 @@
--- BazDrawer: Compatibility shims
+-- BazWidgetDrawers: Compatibility shims
 --
 -- Defensive patches for taint propagation and third-party addon conflicts
--- caused by BazDrawer modifying Blizzard frames (ObjectiveTrackerFrame,
+-- caused by BazWidgetDrawers modifying Blizzard frames (ObjectiveTrackerFrame,
 -- DurabilityFrame, UIParentRightManagedFrameContainer, Minimap, etc.)
 -- from insecure code. Each shim wraps a specific Blizzard function in
 -- pcall so taint errors are caught silently rather than breaking the UI.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ if not addon then return end
 --
 -- Zygor's NotificationCenter.lua line 434 reads
 --     ZygorGuidesViewerMapIcon:GetLeft() > (NC.SingleNotif:GetWidth() + 10)
--- during its threaded 'NC2 startup' phase. When BazDrawer's Minimap
+-- during its threaded 'NC2 startup' phase. When BazWidgetDrawers' Minimap
 -- widget has already reparented the Blizzard Minimap into our drawer
 -- wrapper, the minimap's child frames (including Zygor's map icon)
 -- are in an anchor chain whose positions haven't been resolved yet by
@@ -45,7 +45,7 @@ local function InstallZygorNCFix()
         local icon = _G.ZygorGuidesViewerMapIcon
 
         -- Defer until the icon's anchor chain has resolved. During
-        -- BazDrawer's startup the Minimap gets reparented into a
+        -- BazWidgetDrawers' startup the Minimap gets reparented into a
         -- not-yet-rendered widget wrapper, so the Zygor icon's
         -- GetLeft() can return nil for a frame or two.
         if icon and icon.GetLeft and not icon:GetLeft() then
@@ -95,7 +95,7 @@ ev:SetScript("OnEvent", function(_, _, name)
 end)
 
 -- In case Zygor was already loaded before we registered the event
--- (same-session reload after BazDrawer was installed), try once now.
+-- (same-session reload after BazWidgetDrawers was installed), try once now.
 if _G.ZGV and _G.ZGV.NotificationCenter then
     InstallZygorNCFix()
 end

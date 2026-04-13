@@ -1,4 +1,4 @@
--- BazDrawer Widget: MinimapButtons
+-- BazWidgetDrawers Widget: MinimapButtons
 --
 -- Scans the Minimap for LibDBIcon-registered addon buttons and reparents
 -- them into a grid inside the drawer. Most addon minimap buttons are
@@ -11,7 +11,7 @@
 -- widget's "Re-scan" option. Original parent + anchor are saved so we
 -- can release buttons back to the minimap on unload if ever needed.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID    = "bazdrawer_minimapbuttons"
@@ -527,7 +527,7 @@ end
 
 function MinimapButtonsWidget:Build()
     if self.frame then return self.frame end
-    local f = CreateFrame("Frame", "BazDrawerMinimapButtonsWidget", UIParent)
+    local f = CreateFrame("Frame", "BazWidgetDrawersMinimapButtonsWidget", UIParent)
     f:SetSize(DESIGN_WIDTH, MIN_HEIGHT)
 
     self.frame = f

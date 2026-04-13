@@ -1,5 +1,5 @@
 ## Interface: 120001
-## Title: BazDrawer
+## Title: BazWidgetDrawers
 ## Notes: Slide-out side drawer that hosts docked Baz Suite widgets
 ## Author: Baz4k
 ## Version: 016
@@ -10,7 +10,7 @@
 ## X-Curse-Project-ID: 1511379
 ## Dependencies: BazCore
 ## IconTexture: 7416769
-## SavedVariables: BazDrawerDB
+## SavedVariables: BazWidgetDrawersDB
 
 Core.lua
 Compat.lua

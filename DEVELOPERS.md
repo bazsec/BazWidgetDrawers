@@ -1,10 +1,10 @@
-# BazDrawer — Developer Guide
+# BazWidgetDrawers — Developer Guide
 
-> How to add a widget from your addon to BazDrawer's slot stack.
+> How to add a widget from your addon to BazWidgetDrawers's slot stack.
 
-BazDrawer hosts a vertical stack of **dockable widgets** inside its slide-out side panel. Any addon in the Baz Suite (or any third-party addon you write) can register its own widget through **BazCore's `DockableWidget` API**, and that widget will appear inside BazDrawer automatically — complete with a title bar, drag-to-reorder, floating mode, per-widget settings, and global overrides — without any further wiring.
+BazWidgetDrawers hosts a vertical stack of **dockable widgets** inside its slide-out side panel. Any addon in the Baz Suite (or any third-party addon you write) can register its own widget through **BazCore's `DockableWidget` API**, and that widget will appear inside BazWidgetDrawers automatically — complete with a title bar, drag-to-reorder, floating mode, per-widget settings, and global overrides — without any further wiring.
 
-This guide covers everything you need to know to ship your own BazDrawer-compatible widget.
+This guide covers everything you need to know to ship your own BazWidgetDrawers-compatible widget.
 
 ---
 
@@ -53,7 +53,7 @@ BazCore:QueueForLogin(function()
 end)
 ```
 
-That's it. After `/reload`, your widget shows up in BazDrawer's slot stack with a "Hello" title bar. The user can:
+That's it. After `/reload`, your widget shows up in BazWidgetDrawers's slot stack with a "Hello" title bar. The user can:
 
 - Collapse / expand it via the chevron
 - Move it up or down in the stack
@@ -64,7 +64,7 @@ That's it. After `/reload`, your widget shows up in BazDrawer's slot stack with 
 
 ## The Widget Contract
 
-A widget is just a plain Lua table you pass to `BazCore:RegisterDockableWidget()`. BazDrawer reads specific keys from that table to drive layout and behavior.
+A widget is just a plain Lua table you pass to `BazCore:RegisterDockableWidget()`. BazWidgetDrawers reads specific keys from that table to drive layout and behavior.
 
 ```lua
 BazCore:RegisterDockableWidget({
@@ -92,7 +92,7 @@ Everything after the required fields is opt-in — a bare-minimum widget only ne
 
 ### `id` — Unique Identifier
 
-A string that identifies your widget globally. Used as the key in BazDrawer's saved variables for collapse state, floating position, per-widget settings, and custom order. **Must be unique across all registered widgets.**
+A string that identifies your widget globally. Used as the key in BazWidgetDrawers's saved variables for collapse state, floating position, per-widget settings, and custom order. **Must be unique across all registered widgets.**
 
 Convention: `<addonslug>_<widgetname>`, all lowercase, no spaces. Examples:
 
@@ -107,29 +107,29 @@ Never use a bare generic name like `"widget"` — you'll collide with some other
 
 ### `label` — Display Name
 
-The string shown on the widget's title bar when docked in the drawer, and as the widget's entry name in BazDrawer → Modules and BazDrawer → Widgets. Should be human-readable and capitalized normally ("Quest Tracker", not "questtracker").
+The string shown on the widget's title bar when docked in the drawer, and as the widget's entry name in BazWidgetDrawers → Modules and BazWidgetDrawers → Widgets. Should be human-readable and capitalized normally ("Quest Tracker", not "questtracker").
 
 ### `designWidth` — Native Width
 
 Your widget's **design-space width** in pixels. This is the width your widget was built for at 1.0 scale.
 
-BazDrawer computes a uniform scale factor as `drawerWidth / designWidth` and applies it to your frame via `SetScale`. So a widget with `designWidth = 220` docked inside a 180px-wide drawer renders at scale `180/220 ≈ 0.82`. If the user resizes the drawer wider, every widget scales up together.
+BazWidgetDrawers computes a uniform scale factor as `drawerWidth / designWidth` and applies it to your frame via `SetScale`. So a widget with `designWidth = 220` docked inside a 180px-wide drawer renders at scale `180/220 ≈ 0.82`. If the user resizes the drawer wider, every widget scales up together.
 
 **Pick a design width that matches your content's natural layout.** For dense informational widgets (quest trackers, stat bars), 220–260 is typical. For simple one-line widgets, 160–200 works well.
 
 ### `designHeight` — Initial Height Hint
 
-Your widget's starting height in design pixels. BazDrawer uses this to compute the slot size on the first reflow before `GetDesiredHeight` has been called.
+Your widget's starting height in design pixels. BazWidgetDrawers uses this to compute the slot size on the first reflow before `GetDesiredHeight` has been called.
 
-For fixed-size widgets this is also the final height. For dynamic-height widgets (lists, trackers) this is the height shown before any data is loaded; once you return a real value from `GetDesiredHeight`, BazDrawer reflows to match.
+For fixed-size widgets this is also the final height. For dynamic-height widgets (lists, trackers) this is the height shown before any data is loaded; once you return a real value from `GetDesiredHeight`, BazWidgetDrawers reflows to match.
 
 ### `frame` — The Frame to Dock
 
-The actual `Frame` (or `Button`, or any derived type) that will be parented into a drawer slot. This should be a frame you've already created via `CreateFrame("Frame", ...)` — BazDrawer does **not** create frames for you, it just parents yours.
+The actual `Frame` (or `Button`, or any derived type) that will be parented into a drawer slot. This should be a frame you've already created via `CreateFrame("Frame", ...)` — BazWidgetDrawers does **not** create frames for you, it just parents yours.
 
 Requirements:
 
-- Must be parented to `UIParent` at creation time (BazDrawer will reparent it on dock)
+- Must be parented to `UIParent` at creation time (BazWidgetDrawers will reparent it on dock)
 - Must have its initial size set via `SetSize(designWidth, designHeight)`
 - Must **not** be a `SecureActionButtonTemplate` or any other protected frame — see [Safety Rules](#dependencies-and-safety-rules)
 
@@ -151,10 +151,10 @@ function MyWidget:GetDesiredHeight()
 end
 ```
 
-If your widget's desired height changes, call `addon.WidgetHost:Reflow()` (via the BazDrawer registry) to trigger a re-layout:
+If your widget's desired height changes, call `addon.WidgetHost:Reflow()` (via the BazWidgetDrawers registry) to trigger a re-layout:
 
 ```lua
-local bd = BazCore:GetAddon("BazDrawer")
+local bd = BazCore:GetAddon("BazWidgetDrawers")
 if bd and bd.WidgetHost then bd.WidgetHost:Reflow() end
 ```
 
@@ -178,7 +178,7 @@ end
 To push a fresh status text to the title bar without a full reflow, call:
 
 ```lua
-local bd = BazCore:GetAddon("BazDrawer")
+local bd = BazCore:GetAddon("BazWidgetDrawers")
 if bd and bd.WidgetHost and bd.WidgetHost.UpdateWidgetStatus then
     bd.WidgetHost:UpdateWidgetStatus("myaddon_mywidget")
 end
@@ -186,7 +186,7 @@ end
 
 ### `GetOptionsArgs() → table`
 
-Returns a BazCore options-table fragment that gets rendered on your widget's settings page under **BazDrawer → Widgets → [Your Widget]**. Uses the same widget types as any BazCore options panel: `header`, `description`, `toggle`, `range`, `select`, `execute`, `input`.
+Returns a BazCore options-table fragment that gets rendered on your widget's settings page under **BazWidgetDrawers → Widgets → [Your Widget]**. Uses the same widget types as any BazCore options panel: `header`, `description`, `toggle`, `range`, `select`, `execute`, `input`.
 
 ```lua
 function MyWidget:GetOptionsArgs()
@@ -211,15 +211,15 @@ function MyWidget:GetOptionsArgs()
 end
 ```
 
-For per-widget settings that should be persisted in BazDrawer's per-widget settings store (not your own addon's DB), use:
+For per-widget settings that should be persisted in BazWidgetDrawers's per-widget settings store (not your own addon's DB), use:
 
 ```lua
-local bd = BazCore:GetAddon("BazDrawer")
+local bd = BazCore:GetAddon("BazWidgetDrawers")
 bd:GetWidgetSetting("myaddon_mywidget", "showIcon", defaultValue)
 bd:SetWidgetSetting("myaddon_mywidget", "showIcon", newValue)
 ```
 
-This lets your settings live inside the BazDrawer profile system automatically.
+This lets your settings live inside the BazWidgetDrawers profile system automatically.
 
 ### `OnDock(host)` and `OnUndock()`
 
@@ -250,7 +250,7 @@ If your widget's `designWidth = 220` and the drawer is 176px wide internally, th
 
 - Lay out your frame at your chosen `designWidth` with real pixel values
 - Don't hard-code offsets that assume a specific final screen width
-- Test at different drawer widths (120–400) by dragging the width slider in BazDrawer → Settings → Layout
+- Test at different drawer widths (120–400) by dragging the width slider in BazWidgetDrawers → Settings → Layout
 - Title bars are **not** scaled — they always use the full slot width at 1.0 so labels stay legible
 
 ---
@@ -276,7 +276,7 @@ function MyWidget:UpdateContent()
     if newHeight ~= self._desiredHeight then
         self._desiredHeight = newHeight
         self.frame:SetHeight(newHeight)
-        local bd = BazCore:GetAddon("BazDrawer")
+        local bd = BazCore:GetAddon("BazWidgetDrawers")
         if bd and bd.WidgetHost then bd.WidgetHost:Reflow() end
     end
 end
@@ -303,16 +303,16 @@ The title bar's status text is on the **right** side, matching Blizzard's style.
 
 ## Per-Widget Settings
 
-Settings that belong to one specific widget instance (collapsed state, chosen mode, custom options) should live in **BazDrawer's per-widget settings store**, not your own addon's DB. This gives you:
+Settings that belong to one specific widget instance (collapsed state, chosen mode, custom options) should live in **BazWidgetDrawers's per-widget settings store**, not your own addon's DB. This gives you:
 
 - Automatic profile support via BazCore's profile system
-- Global override support via BazDrawer → Global Options
+- Global override support via BazWidgetDrawers → Global Options
 - Clean separation between addon-level and widget-level configuration
 
 **API:**
 
 ```lua
-local bd = BazCore:GetAddon("BazDrawer")
+local bd = BazCore:GetAddon("BazWidgetDrawers")
 
 -- Read with a default fallback
 local mode = bd:GetWidgetSetting("myaddon_mywidget", "mode", "default")
@@ -352,14 +352,14 @@ Both are optional. The typical use case is delayed initialization: a heavy widge
 
 ```
 ## Dependencies: BazCore
-## OptionalDeps: BazDrawer
+## OptionalDeps: BazWidgetDrawers
 ```
 
-**BazCore is a hard dependency** — you need it loaded to call `BazCore:RegisterDockableWidget`. **BazDrawer is an optional dependency** — your widget should still work (or gracefully no-op) when BazDrawer isn't installed. See [Standalone Fallback](#standalone-fallback).
+**BazCore is a hard dependency** — you need it loaded to call `BazCore:RegisterDockableWidget`. **BazWidgetDrawers is an optional dependency** — your widget should still work (or gracefully no-op) when BazWidgetDrawers isn't installed. See [Standalone Fallback](#standalone-fallback).
 
 ### Taint-safe rules
 
-BazDrawer's widgets run in the **non-protected** Lua environment. This imposes a few hard rules:
+BazWidgetDrawers's widgets run in the **non-protected** Lua environment. This imposes a few hard rules:
 
 1. **Never register a `SecureActionButtonTemplate` or any protected frame as your widget frame.** Blizzard's secure execution path will taint when the host reparents it, and downstream Blizzard code (Edit Mode, Scroll frames, Combat Log) will error.
 2. **Never hook protected methods on your widget frame** via `hooksecurefunc` on things like `CastSpellByID`, `UseAction`, or secure unit functions.
@@ -374,7 +374,7 @@ Create a **non-secure wrapper frame** as your widget's root, and place your `Sec
 
 ## Standalone Fallback
 
-Your addon should work **whether or not BazDrawer is installed.** Here's the pattern:
+Your addon should work **whether or not BazWidgetDrawers is installed.** Here's the pattern:
 
 ```lua
 local addon = BazCore:GetAddon("MyAddon")
@@ -391,7 +391,7 @@ BazCore:QueueForLogin(function()
 
     if BazCore.RegisterDockableWidget then
         -- BazCore is new enough to expose the DockableWidget API —
-        -- register, and BazDrawer will adopt us if it's installed.
+        -- register, and BazWidgetDrawers will adopt us if it's installed.
         BazCore:RegisterDockableWidget({
             id           = "myaddon_mywidget",
             label        = "My Widget",
@@ -402,10 +402,10 @@ BazCore:QueueForLogin(function()
         })
     end
 
-    -- Fallback: if BazDrawer isn't installed, the widget still needs
+    -- Fallback: if BazWidgetDrawers isn't installed, the widget still needs
     -- somewhere to live. Register it as a standalone Edit Mode frame
     -- so the user can position it anywhere on screen.
-    local bd = BazCore:GetAddon("BazDrawer")
+    local bd = BazCore:GetAddon("BazWidgetDrawers")
     if not bd then
         frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         frame:Show()
@@ -421,9 +421,9 @@ BazCore:QueueForLogin(function()
 end)
 ```
 
-When BazDrawer **is** installed, it picks up your widget via the registry and parents it into the drawer. Your standalone Edit Mode registration is unused because BazDrawer's widget host takes over the frame's parent.
+When BazWidgetDrawers **is** installed, it picks up your widget via the registry and parents it into the drawer. Your standalone Edit Mode registration is unused because BazWidgetDrawers's widget host takes over the frame's parent.
 
-When BazDrawer **isn't** installed, the registry still exists (it lives in BazCore) but nothing consumes it, so your widget falls back to the standalone path.
+When BazWidgetDrawers **isn't** installed, the registry still exists (it lives in BazCore) but nothing consumes it, so your widget falls back to the standalone path.
 
 ---
 
@@ -466,7 +466,7 @@ function GoldWidget:Refresh()
 
     self._copper = copper
 
-    local bd = BazCore:GetAddon("BazDrawer")
+    local bd = BazCore:GetAddon("BazWidgetDrawers")
     if bd and bd.WidgetHost and bd.WidgetHost.UpdateWidgetStatus then
         bd.WidgetHost:UpdateWidgetStatus(WIDGET_ID)
     end
@@ -486,7 +486,7 @@ function GoldWidget:GetStatusText()
 end
 
 function GoldWidget:GetOptionsArgs()
-    local bd = BazCore:GetAddon("BazDrawer")
+    local bd = BazCore:GetAddon("BazWidgetDrawers")
     return {
         displayHeader = {
             order = 10,
@@ -556,7 +556,7 @@ This widget is ~100 lines of Lua and gives you:
 
 - A gold display that updates on every money change
 - A live status text showing current copper
-- A toggle in BazDrawer's widget settings page
+- A toggle in BazWidgetDrawers's widget settings page
 - Automatic scaling to the drawer width
 - Move Up / Down reordering
 - Collapse / expand via title bar chevron
@@ -570,10 +570,10 @@ This widget is ~100 lines of Lua and gives you:
 
 ## Questions?
 
-BazDrawer is part of the [Baz Suite](https://www.curseforge.com/members/baz4k/projects) of addons. The source for every widget that ships with BazDrawer is in `Widgets/` — read those files as reference implementations for patterns like event hookup, frame reparenting, and options integration. Good starting points:
+BazWidgetDrawers is part of the [Baz Suite](https://www.curseforge.com/members/baz4k/projects) of addons. The source for every widget that ships with BazWidgetDrawers is in `Widgets/` — read those files as reference implementations for patterns like event hookup, frame reparenting, and options integration. Good starting points:
 
 - **`Widgets/Repair.lua`** — simplest widget with a status text and a single select option
 - **`Widgets/MinimapButtons.lua`** — shows slot grids, custom ordering, and adopting third-party frames
 - **`Widgets/QuestTracker.lua`** — full-featured widget with pagination, events, and complex options
 
-If you hit a taint error or layout bug, file an issue against BazDrawer on GitHub with a minimal repro and we'll take a look.
+If you hit a taint error or layout bug, file an issue against BazWidgetDrawers on GitHub with a minimal repro and we'll take a look.

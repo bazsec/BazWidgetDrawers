@@ -2,7 +2,7 @@
 -- Main widget lifecycle: frame creation, event registration, data polling
 -- loop, item-level pagination, and BazCore widget registration.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 local QT = addon.QT
 local C  = QT.C
@@ -163,7 +163,7 @@ end
 
 function QT.Build()
     if QT.frame then return QT.frame end
-    local f = CreateFrame("Frame", "BazDrawerQuestTrackerWidget", UIParent)
+    local f = CreateFrame("Frame", "BazWidgetDrawersQuestTrackerWidget", UIParent)
     f:SetSize(C.DESIGN_WIDTH, C.MIN_HEIGHT)
     QT.frame = f
     QT.scrollChild = f

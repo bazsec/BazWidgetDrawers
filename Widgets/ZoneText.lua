@@ -1,4 +1,4 @@
--- BazDrawer Widget: Zone Text
+-- BazWidgetDrawers Widget: Zone Text
 --
 -- Single-line widget that displays the current minimap zone text,
 -- centered, so long zone names get their own row without fighting for
@@ -8,7 +8,7 @@
 -- orange hostile, yellow sanctuary) to match the default Blizzard zone
 -- text colors. Updates on ZONE_CHANGED events.
 
-local addon = BazCore:GetAddon("BazDrawer")
+local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
 
 local WIDGET_ID     = "bazdrawer_zonetext"
@@ -100,7 +100,7 @@ end
 
 function ZoneWidget:Build()
     if self.frame then return self.frame end
-    local f = CreateFrame("Frame", "BazDrawerZoneTextWidget", UIParent)
+    local f = CreateFrame("Frame", "BazWidgetDrawersZoneTextWidget", UIParent)
     f:SetSize(DESIGN_WIDTH, DESIGN_HEIGHT + PAD * 2)
     self.frame = f
 

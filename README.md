@@ -1,168 +1,197 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/bazsec/BazWidgetDrawers/master/logo.png" alt="BazWidgetDrawers Logo" width="300"/>
-</p>
+> **Warning: Requires [BazCore](https://www.curseforge.com/wow/addons/bazcore).** If you use the CurseForge app, it will be installed automatically. Manual users must install BazCore separately.
 
-<h1 align="center">BazWidgetDrawers</h1>
+# BazWidgetDrawers
 
-<p align="center">
-  <strong>Slide-out side drawer for World of Warcraft</strong><br/>
-  Hosts a stack of dockable widgets in a full-height side panel that fades out of the way when you're not using it.
-</p>
+![WoW](https://img.shields.io/badge/WoW-12.0_Midnight-blue) ![License](https://img.shields.io/badge/License-GPL_v2-green) ![Version](https://img.shields.io/github/v/tag/bazsec/BazWidgetDrawers?label=Version&color=orange)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/WoW-12.0%20Midnight-blue" alt="WoW Version"/>
-  <img src="https://img.shields.io/badge/License-GPL%20v2-green" alt="License"/>
-  <img src="https://img.shields.io/github/v/tag/bazsec/BazWidgetDrawers?label=Version&color=orange" alt="Version"/>
-</p>
+A full-height slide-out side drawer for World of Warcraft that hosts a vertical stack of dockable widgets and fades out of the way when you're not using it.
 
-> **Requires [BazCore](https://www.curseforge.com/wow/addons/bazcore)**
-> BazWidgetDrawers depends on the BazCore framework addon. If you use the CurseForge app, it will be installed automatically. Manual users must install BazCore separately.
+BazWidgetDrawers docks to either the left or right edge of your screen and holds a stack of widgets - Quest Tracker, Minimap, Minimap Buttons, Zone Text, Micro Menu, Info Bar, and any widget registered through LibBazWidget-1.0 or BazCore's Dockable Widget API. Instead of scattering a dozen small frames around your UI, BazWidgetDrawers gathers everything into one tidy column that sits flush against the edge of your screen and can be configured, reordered, collapsed, floated, or hidden as a unit.
 
----
+The drawer fades to completely invisible when you're not interacting with it, while widget content stays at full opacity so quest objectives, minimap pings, and status text remain readable at all times. Hover anywhere over the drawer and the chrome pops back; move away and it disappears into the background.
 
-## What is BazWidgetDrawers?
+For an even more minimalist look, the **lock system** hides all chrome entirely, tightens widget spacing, and disables collapse - the drawer reads as a perfectly clean column of widgets with no decoration. Hovering still reveals a padlock icon so you can unlock at any time.
 
-BazWidgetDrawers is a full-height slide-out panel that docks to either the left or right edge of your screen and hosts a vertical stack of widgets. It ships with a Quest Tracker (which replaces Blizzard's default objective tracker), a Repair widget, a Minimap widget that reparents the real Blizzard minimap, a Minimap Info Bar (zone text, clock, calendar, and tracking), and a Minimap Buttons collector that adopts LibDBIcon buttons from other addons.
+Widgets can also be **dormant** - they register and unregister themselves based on game state. For example, the Dungeon Finder widget (from BazWidgets) only appears when you're queued. No empty "Not queued" state wasting space - the widget simply doesn't exist when it's not relevant.
 
-The drawer fades down to a discreet outline when you're not using it and pops back to full opacity on hover, so it stays out of the way during gameplay but is always one mouseover away. Other Baz Suite addons (and your own addons) can register their own widgets via the BazCore Dockable Widget API and they'll appear inside BazWidgetDrawers automatically.
+BazWidgetDrawers is fully extensible: any addon can publish widgets via LibBazWidget-1.0 (no BazCore dependency required) and they appear in the drawer automatically with title bar, scaling, reordering, floating, settings, and more - all for free.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/bazsec/BazWidgetDrawers/master/screenshot.png" alt="BazWidgetDrawers Screenshot" width="800"/>
-  <br/>
-  <em>The full BazWidgetDrawers stack — Info Bar, Minimap, Minimap Buttons, and Quest Tracker.</em>
-</p>
-
----
+***
 
 ## Features
 
-### Slide-Out Drawer
-- Full-height side panel with a metal pull-tab handle on the active edge
-- Switchable side (left or right) — the tab and slide direction flip automatically
-- Configurable width with live re-scaling of every docked widget
-- Edge hot zone re-reveals the tab when the drawer is collapsed
-- Background and frame opacity sliders for fine control over the at-rest look
+### Slide-Out Side Panel
+
+*   **Full-height anchoring** - spans top to bottom, pinned flush against the chosen edge
+*   **Metal pull-tab handle** with Blizzard's own atlas textures - click to slide the drawer on or off screen
+*   **Switchable side (Left or Right)** - tab, slide direction, and edge hot zone all flip automatically
+*   **Configurable width** (120-400 px) with uniform live re-scaling of every docked widget
+*   **Background opacity** and **frame opacity** sliders for fine control
 
 ### Smart Fade System
-- Backdrop, border, tab, and chrome fade as a single unit while widget content stays at full opacity
-- Configurable fade delay, fade duration, and faded opacity target
-- Optional "force full opacity in combat" mode
-- Optional "fade tab when closed" so the tab is always visible
+
+*   **Chrome fades as a unit** - backdrop, border, pull-tab, and bottom bar all tween together via UIFrameFade
+*   **Default faded opacity is 0** (fully invisible) - the drawer disappears when not hovered
+*   **Widget content always at full opacity** - quest text, minimap, and status info stay readable
+*   **Configurable fade delay** (0-5 s), **fade duration** (0.05-2 s), and **faded opacity target** (0-1)
+*   **Force full opacity in combat** (optional)
+*   **Fade tab when closed** (optional) - lets the pull-tab disappear when the drawer is collapsed
+*   **Edge hot zone** - invisible strip along the screen edge re-reveals the tab when collapsed
 
 ### Lock System
-- Padlock icon in the drawer's bottom title bar (visible on hover)
-- When locked: drawer cannot collapse, all chrome is hidden, widget title bar space is collapsed, fade settings are greyed out
-- Unlock by clicking the padlock again
+
+The padlock icon on the bottom bar (visible on hover, fades in/out with the same timing as the chrome) toggles locked mode:
+
+*   **Drawer cannot collapse** while locked
+*   **All chrome is hidden** - label, widget count, and info button disappear
+*   **Widget title bar space is collapsed** - widgets pack flush against each other
+*   **Fade settings are greyed out** in the options panel
+*   **Only the lock icon remains visible on hover** - click to unlock
 
 ### Widget Host
-- Per-widget title bars with click-to-collapse chevron and live status text
-- Drag-to-reorder via Move Up / Move Down on each widget's page
-- Floating mode — detach any widget into its own draggable frame and place it via Edit Mode
-- Per-widget enable/disable via the Modules subcategory
-- Per-widget settings + global overrides via Global Options
 
-### Built-in Widgets
+*   **Per-widget title bars** with collapse chevron, widget label, and live status text (quest count, durability %, server time, etc.)
+*   **Drag-to-reorder** - hold a title bar for half a second (it turns green), then drag up or down to swap positions
+*   **Move Up / Move Down** buttons side by side at the top of each widget's settings page
+*   **Floating mode** - detach any widget and position it anywhere via Blizzard's Edit Mode
+*   **Enable / disable** individual widgets via the Modules subcategory
+*   **Per-widget settings** exposed via each widget's GetOptionsArgs hook
+*   **Global overrides** - set a key once and it cascades to every widget
+*   **Per-widget collapse** via the title bar chevron - click to collapse, click again to expand
 
-**Quest Tracker** — Full Blizzard objective tracker replica with sections:
+### Dormant Widgets
 
-| Section | Description |
-|---------|-------------|
-| Dungeon / Scenario | Decorative stage block + boss list with graphic orb bullets and green checkmarks; dynamic label ("Dungeon", scenario name, "Proving Grounds") based on scenario type |
-| Campaign | Story quests classified via `C_QuestInfoSystem.GetQuestClassification` |
-| Questlines | Multi-quest storyline tracking |
-| Quests | Standard tracked quests with native POI super-track buttons |
-| Achievements | Tracked achievements via `C_ContentTracking`; left-click opens the achievement, right-click untracks |
+Some widgets are dormant - they only appear in the drawer when a condition is met:
 
-Plus item-level pagination (no half-cut quests when scrolling), TomTom waypoint integration, collapsible group headers, and an option to hide Blizzard's default tracker.
+*   **Automatic lifecycle** - widgets register/unregister based on game events
+*   **No wasted space** - dormant widgets have no slot, no title bar, no space in the drawer
+*   **Still configurable** - dormant widgets appear in the Widgets settings list marked with [D] and can be reordered while dormant
+*   **Built on LibBazWidget-1.0** - any addon can use RegisterDormantWidget with an events list and condition function
 
-**Repair** — Three-column layout (paper doll / damaged-slot list / durability percent):
+***
 
-| Setting | Description |
-|---------|-------------|
-| Paper Doll Mode | Custom icon grid / native DurabilityFrame / none |
-| Hide Default Durability Frame | Permanently suppress Blizzard's auto-popup armored figure |
+## Built-In Widgets
 
-**Minimap** — Reparents the real Blizzard minimap into the drawer at a fixed scale.
+### Quest Tracker
 
-**Minimap Buttons** — Adopts LibDBIcon and other addon-registered minimap buttons into a tidy grid.
+Full Blizzard objective tracker replica. Pure read-only polling of C_QuestLog, C_Scenario, C_ContentTracking, and friends - taint-safe by design.
 
-**Minimap Info Bar** — Zone text + scaled clock + day-of-month calendar proxy + native minimap tracking dropdown in one tightly grouped bar.
+*   **Dungeon / Scenario section** with decorative stage block using Blizzard's scenario atlas textures, graphic orb bullets that turn into green checkmarks on completion, and auto-hide when leaving the instance
+*   **Quest sections** binned by classification: Campaign, Questlines, Legendary, Callings, Quests - with collapsible group headers using Blizzard's ornamental atlases
+*   **Achievement section** with click-to-open and right-click-to-untrack
+*   **Bonus objectives** from area task quests
+*   **Progress bars** with Blizzard's native border styling
+*   **Quest item buttons** using QuestObjectiveItemButtonTemplate
+*   **Auto-complete popup** with pulse animation for turn-in quests
+*   **Native POI buttons** - click to super-track, click title to open map, right-click to untrack
+*   **Item-level pagination** - scroll through quests one at a time with the mouse wheel
+*   **M+ Challenge Mode block** with keystone timer, affixes, and death count
+*   **Waypoint integration** - TomTom and Zygor support for super-tracked quest waypoints
+*   **Hide Default Tracker** option (default on)
 
----
+### Zone Text
+
+Zone name display colored automatically by PVP status - gold in neutral zones, green in friendly, red in hostile, orange in contested, light blue in sanctuary.
+
+### Minimap
+
+Reparents the real Blizzard minimap into the drawer at a fixed scale. All native functionality preserved - click-to-waypoint, mouse wheel zoom, right-click menu, addon pings, tracking.
+
+### Minimap Buttons
+
+Adopts LibDBIcon and other addon-registered minimap buttons into a centered grid with customizable button ordering. Whitelist-based detection (LibDBIcon10_* prefix + known buttons). The LFG queue eye is always captured into slot 1.
+
+### Micro Menu
+
+Reparents the Blizzard micro menu bar (character, spellbook, talents, LFG, achievements, shop, etc.) into a drawer widget. Scales to fill the drawer width. Fully transparent at rest, fades in on hover. Option to hide the bags bar. Edit Mode highlight always visible.
+
+### Info Bar
+
+Compact horizontal bar combining the Blizzard clock (1.25x scale), day-of-month calendar button (taint-safe proxy), and native minimap tracking dropdown. Server time displayed in the widget title bar.
+
+***
 
 ## Slash Commands
 
 | Command | Description |
-|---------|-------------|
-| `/bd toggle` | Open or close the drawer |
-| `/bd show` | Open the drawer |
-| `/bd hide` | Close the drawer |
-| `/bdrawer` | Same as `/bd` (full alias for all subcommands) |
+| --- | --- |
+| `/bwd toggle` | Open or close the drawer |
+| `/bwd show` | Open the drawer |
+| `/bwd hide` | Close the drawer |
 
----
-
-## Installation
-
-### CurseForge / WoW Addon Manager
-Search for **BazWidgetDrawers** in your addon manager of choice. BazCore will be installed automatically as a dependency.
-
-### Manual Installation
-1. Install [BazCore](https://www.curseforge.com/wow/addons/bazcore) first
-2. Download the latest BazWidgetDrawers release
-3. Extract to `World of Warcraft/_retail_/Interface/AddOns/BazWidgetDrawers/`
-4. Restart WoW or `/reload`
-
----
+***
 
 ## Compatibility
 
-| | |
-|---|---|
-| **WoW Version** | Retail 12.0.1 (Midnight) |
-| **API Safety** | Pure read-only polling — no protected frame reparenting, taint-safe by design |
-| **Edit Mode** | Floating widgets register as Edit Mode frames via BazCore |
-| **TomTom** | Optional integration for the Quest Tracker waypoint feature |
+*   **WoW Version:** Retail 12.0 (Midnight)
+*   **Midnight API Safe:** Pure read-only polling - no reparenting of protected frames, taint-safe by design
+*   **Edit Mode:** Floating widgets register as Edit Mode frames via BazCore with snapping, selection sync, and native styling
+*   **TomTom:** Optional waypoint integration for super-tracked quests
+*   **Zygor:** Optional waypoint integration via ZGV.Pointer:SetWaypoint
+*   **LibDBIcon-1.0:** Auto-detected for Minimap Buttons widget
+*   **Combat Safe:** No protected frames modified during combat
+*   **LibBazWidget-1.0:** Standalone widget registry library embedded in BazCore - third-party addons can publish widgets without any BazCore dependency
 
----
+***
 
 ## Dependencies
 
 **Required:**
-- [BazCore](https://www.curseforge.com/wow/addons/bazcore) — shared framework for Baz Suite addons
+
+*   [BazCore](https://www.curseforge.com/wow/addons/bazcore) - shared framework for Baz Suite addons (installed automatically by the CurseForge app)
 
 **Optional:**
-- [TomTom](https://www.curseforge.com/wow/addons/tomtom) — for super-tracked quest waypoints
-- [LibDBIcon-1.0](https://www.curseforge.com/wow/addons/libdbicon-1-0) — for the Minimap Buttons widget to detect addon-registered icons
 
----
+*   [BazWidgets](https://www.curseforge.com/wow/addons/bazwidgets) - widget pack with Dungeon Finder (dormant), Repair, and more
+*   [TomTom](https://www.curseforge.com/wow/addons/tomtom) - for Quest Tracker waypoint integration
+*   [LibDBIcon-1.0](https://www.curseforge.com/wow/addons/libdbicon-1-0) - for Minimap Buttons widget
 
-## Adding Your Own Widgets
+***
 
-Any addon can register a dockable widget via BazCore:
+## For Widget Authors
+
+Any addon can register widgets via LibBazWidget-1.0 (no BazCore dependency needed):
 
 ```lua
-BazCore:RegisterDockableWidget({
+local LBW = LibStub("LibBazWidget-1.0")
+
+-- Always-on widget
+LBW:RegisterWidget({
     id           = "myaddon_mywidget",
     label        = "My Widget",
     designWidth  = 200,
     designHeight = 60,
     frame        = myFrame,
-    GetDesiredHeight = function() return self._height end,
-    GetStatusText    = function() return "12", 1, 1, 1 end,
-    GetOptionsArgs   = function() return { ... } end,
+    GetDesiredHeight = function() return height end,
+    GetStatusText    = function() return "text", r, g, b end,
+})
+
+-- Dormant widget (only appears when condition is true)
+LBW:RegisterDormantWidget(widgetDef, {
+    events = { "SOME_EVENT", "ANOTHER_EVENT" },
+    condition = function() return ShouldBeActive() end,
 })
 ```
 
-The widget appears inside BazWidgetDrawers automatically. See the BazCore developer reference for the full contract.
+See the [LibBazWidget-1.0 README](https://github.com/bazsec/LibBazWidget) and the [BazWidgets source](https://github.com/bazsec/BazWidgets) for reference implementations.
 
----
+***
+
+## Part of the Baz Suite
+
+BazWidgetDrawers is part of the **Baz Suite** of addons, all built on the [BazCore](https://www.curseforge.com/wow/addons/bazcore) framework:
+
+*   **[BazBars](https://www.curseforge.com/wow/addons/bazbars)** - Custom extra action bars
+*   **[BazWidgetDrawers](https://www.curseforge.com/wow/addons/bazwidgetdrawers)** - Slide-out widget drawer
+*   **[BazWidgets](https://www.curseforge.com/wow/addons/bazwidgets)** - Widget pack for BazWidgetDrawers
+*   **[BazNotificationCenter](https://www.curseforge.com/wow/addons/baznotificationcenter)** - Toast notification system
+*   **[BazLootNotifier](https://www.curseforge.com/wow/addons/bazlootnotifier)** - Animated loot popups
+*   **[BazFlightZoom](https://www.curseforge.com/wow/addons/bazflightzoom)** - Auto zoom on flying mounts
+*   **[BazMap](https://www.curseforge.com/wow/addons/bazmap)** - Resizable map and quest log window
+*   **[BazMapPortals](https://www.curseforge.com/wow/addons/bazmapportals)** - Mage portal/teleport map pins
+
+***
 
 ## License
 
-BazWidgetDrawers is licensed under the [GNU General Public License v2](LICENSE) (GPL v2).
-
----
-
-<p align="center">
-  <sub>Built with engineering precision by <strong>Baz4k</strong></sub>
-</p>
+BazWidgetDrawers is licensed under the **GNU General Public License v2** (GPL v2).

@@ -1,5 +1,11 @@
 # BazDrawer Changelog
 
+## 014 - Progress Bar Polish
+- **Blizzard-matching progress bar border** — added `UI-Character-Skills-BarBorder` left/right caps and tiled middle border to the quest tracker's progress bar, matching the default tracker's `ObjectiveTrackerProgressBarTemplate` styling
+- **Shorter bar width** — capped at 180px (Blizzard's exact width) instead of stretching the full objective text area
+- **Stripped redundant percentage from objective text** — progress bar objectives like "Shrine protected (74%)" now display as just "Shrine protected" since the bar already shows the percentage visually
+- **Added padding above and below the bar** — 4px breathing room so the bar doesn't crowd the objective text or the next element
+
 ## 013 - Fix UnitFrame Taint Errors
 - **Fixed "secret number value tainted by BazDrawer" errors** on UnitFrame health bars, mana bars, and text status bars when targeting enemies or entering combat
   - Root cause: BazDrawer was replacing `ObjectiveTrackerFrame.Show` and `DurabilityFrame.Show` with `Hide` directly, which taints the frame's method table. The taint propagated through `UIParentRightManagedFrameContainer` to PlayerFrame/TargetFrame health and mana bars.

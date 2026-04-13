@@ -135,22 +135,45 @@ function QT.CreateBlock()
         block.itemButton = itemBtn
     end
 
-    -- Progress bar
+    -- Progress bar — matches Blizzard's ObjectiveTrackerProgressBar
+    -- style with the UI-Character-Skills-BarBorder left/right caps
+    -- and tiled middle border.
+    -- Shorter width than objectives — matches Blizzard's 180px bar
+    -- scaled to our design width proportionally
+    local barW = math.min(180, C.DESIGN_WIDTH - C.PAD * 2 - C.OBJ_INDENT - C.OBJ_RIGHT_PAD)
     local bar = CreateFrame("StatusBar", nil, block)
-    bar:SetSize(C.DESIGN_WIDTH - C.PAD * 2 - C.OBJ_INDENT - C.OBJ_RIGHT_PAD, 14)
+    bar:SetSize(barW, 13)
     bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
     bar:SetStatusBarColor(0.26, 0.42, 0.75, 1)
     bar:SetMinMaxValues(0, 100)
     bar:SetValue(0)
+
     bar.bg = bar:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints()
     bar.bg:SetColorTexture(0.08, 0.08, 0.10, 0.7)
+
+    -- Border (left cap, right cap, tiled middle)
+    local BORDER_TEX = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder"
+    bar.borderLeft = bar:CreateTexture(nil, "ARTWORK")
+    bar.borderLeft:SetTexture(BORDER_TEX)
+    bar.borderLeft:SetSize(9, 22)
+    bar.borderLeft:SetTexCoord(0.007843, 0.043137, 0.193548, 0.774193)
+    bar.borderLeft:SetPoint("LEFT", -3, 0)
+
+    bar.borderRight = bar:CreateTexture(nil, "ARTWORK")
+    bar.borderRight:SetTexture(BORDER_TEX)
+    bar.borderRight:SetSize(9, 22)
+    bar.borderRight:SetTexCoord(0.043137, 0.007843, 0.193548, 0.774193)
+    bar.borderRight:SetPoint("RIGHT", 3, 0)
+
+    bar.borderMid = bar:CreateTexture(nil, "ARTWORK")
+    bar.borderMid:SetTexture(BORDER_TEX)
+    bar.borderMid:SetTexCoord(0.113726, 0.1490196, 0.193548, 0.774193)
+    bar.borderMid:SetPoint("TOPLEFT", bar.borderLeft, "TOPRIGHT")
+    bar.borderMid:SetPoint("BOTTOMRIGHT", bar.borderRight, "BOTTOMLEFT")
+
     bar.text = bar:CreateFontString(nil, "OVERLAY")
-    if _G[C.OBJECTIVE_FONT] then
-        bar.text:SetFontObject(_G[C.OBJECTIVE_FONT])
-    else
-        bar.text:SetFontObject("GameFontHighlightSmall")
-    end
+    bar.text:SetFontObject("GameFontHighlightMedium")
     bar.text:SetPoint("CENTER")
     bar.text:SetTextColor(1, 1, 1)
     bar:Hide()
@@ -417,7 +440,13 @@ function QT.PopulateBlock(block, quest)
             line.icon:Hide()
             line.text:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
             line.text:SetWidth(objWidth)
-            line.text:SetText("- " .. (obj.text or ""))
+            -- Strip redundant "(XX%)" from the text when a progress
+            -- bar is showing the percentage visually already
+            local displayText = obj.text or ""
+            if quest.progressBarPct and obj.type == "progressbar" then
+                displayText = displayText:gsub("%s*%(%d+%%%)", "")
+            end
+            line.text:SetText("- " .. displayText)
         end
 
         if obj.finished then
@@ -444,17 +473,19 @@ function QT.PopulateBlock(block, quest)
         end
     end
 
-    -- Progress bar
+    -- Progress bar — extra padding above and below so the bar doesn't
+    -- crowd the objective text or the next element.
     if block.progressBar then
         if quest.progressBarPct and not isScenario then
-            local barH = 14
+            local barH = 13
+            local barPad = 4  -- breathing room above and below the bar
             block.progressBar:ClearAllPoints()
             block.progressBar:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT",
-                C.OBJ_INDENT, -(objTotalH + C.OBJ_LINE_GAP))
+                C.OBJ_INDENT, -(objTotalH + C.OBJ_LINE_GAP + barPad))
             block.progressBar:SetValue(quest.progressBarPct)
             block.progressBar.text:SetText(math.floor(quest.progressBarPct) .. "%")
             block.progressBar:Show()
-            objTotalH = objTotalH + barH + C.OBJ_LINE_GAP
+            objTotalH = objTotalH + barH + C.OBJ_LINE_GAP + barPad * 2
         else
             block.progressBar:Hide()
         end

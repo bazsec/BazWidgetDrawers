@@ -1,5 +1,9 @@
 # BazDrawer Changelog
 
+## 015 - Zygor Waypoint Integration, Waypoints Module Rename
+- **Zygor waypoint integration** — when Zygor Guides is installed, super-tracking a quest now sets Zygor's navigation arrow to the quest's next objective via `ZGV.Pointer:SetWaypoint(mapID, x, y, { title, arrow=true, findpath=true, type="manual" })`. Independently toggleable in Quest Tracker → Integrations → Zygor Waypoint. Greyed out when Zygor isn't installed. Fires alongside TomTom (both can run simultaneously).
+- **Renamed `TomTom.lua` → `Waypoints.lua`** — the file now handles both TomTom and Zygor integrations, so the old name was misleading. `ResolveQuestWaypoint` promoted from local function to `QT.ResolveQuestWaypoint` so both integrations share the same waypoint resolution logic.
+
 ## 014 - Progress Bar Polish
 - **Blizzard-matching progress bar border** — added `UI-Character-Skills-BarBorder` left/right caps and tiled middle border to the quest tracker's progress bar, matching the default tracker's `ObjectiveTrackerProgressBarTemplate` styling
 - **Shorter bar width** — capped at 180px (Blizzard's exact width) instead of stretching the full objective text area

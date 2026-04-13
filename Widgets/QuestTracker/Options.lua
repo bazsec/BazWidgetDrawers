@@ -105,5 +105,21 @@ function QT.GetOptionsArgs()
             end,
             disabled = function() return not QT.HasTomTom() end,
         },
+        zygorEnabled = {
+            order = 32,
+            type = "toggle",
+            name = "Zygor Waypoint",
+            desc = "When Zygor Guides is installed, set Zygor's navigation arrow to the super-tracked quest's next objective. Turn off to leave Zygor alone.",
+            get = function()
+                return addon:GetWidgetSetting(C.WIDGET_ID, "zygorEnabled", true) ~= false
+            end,
+            set = function(_, val)
+                addon:SetWidgetSetting(C.WIDGET_ID, "zygorEnabled", val)
+                if val then
+                    QT.OnSuperTrackChanged()
+                end
+            end,
+            disabled = function() return not QT.HasZygor() end,
+        },
     }
 end

@@ -457,7 +457,7 @@ local function BuildDrawerGroup(drawerDef, drawerId, index, total)
         labelInput = {
             order = 1,
             type = "input",
-            name = "Label",
+            name = "Drawer Name",
             desc = "Display name shown in the tab tooltip.",
             get = function()
                 local def = addon:GetDrawer(drawerId)
@@ -467,6 +467,11 @@ local function BuildDrawerGroup(drawerDef, drawerId, index, total)
                 addon:RenameDrawer(drawerId, val)
                 BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
             end,
+        },
+        labelSpacer = {
+            order = 1.5,
+            type = "description",
+            name = " ",
         },
         chooseIcon = {
             order = 2,

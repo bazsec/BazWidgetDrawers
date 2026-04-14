@@ -14,6 +14,11 @@ local function GetSettingsOptionsTable()
         name = "Settings",
         type = "group",
         args = {
+            intro = {
+                order = 0.1,
+                type = "lead",
+                text = "Configure how the drawer looks and behaves on screen. Settings here apply to the active drawer.",
+            },
             layoutHeader = {
                 order = 1,
                 type = "header",
@@ -67,6 +72,12 @@ local function GetSettingsOptionsTable()
                 type = "header",
                 name = "Appearance",
             },
+            appearanceLockNote = {
+                order = 20.5,
+                type = "note",
+                style = "info",
+                text = "Appearance and fade settings are disabled while the drawer is locked. Click the padlock on the drawer's bottom bar to unlock.",
+            },
             backgroundOpacity = {
                 order = 21,
                 type = "range",
@@ -98,6 +109,12 @@ local function GetSettingsOptionsTable()
                 order = 30,
                 type = "header",
                 name = "Fading",
+            },
+            fadingIntro = {
+                order = 30.5,
+                type = "note",
+                style = "tip",
+                text = "Set Faded Opacity to 0 for a fully invisible drawer when you're not hovering it. Widget content always stays at full opacity, even while the chrome is faded.",
             },
             fadeEnabled = {
                 order = 31,

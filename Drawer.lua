@@ -155,12 +155,11 @@ function Drawer:Build()
     display.label:SetPoint("LEFT", 4, 0)
     display.label:SetText("BAZWIDGETDRAWERS")
 
-    -- Lock button — rightmost element in the chrome row. Parented to
-    -- `display` (NOT chromeGroup) so its alpha is not affected by the
-    -- chrome fade tween; otherwise it inherits the faded chrome alpha
-    -- and can't un-fade on hover independently. Anchored to the chrome
-    -- frame's RIGHT so it still lives in the title bar visually.
-    display.lockButton = CreateFrame("Button", nil, display)
+    -- Lock button — parented to chromeGroup so it fades with the rest
+    -- of the chrome (label, count, info button). When locked, the chrome
+    -- is hidden but the lock gets its own hover-based visibility via
+    -- ApplyLockUI.
+    display.lockButton = CreateFrame("Button", nil, chrome)
     display.lockButton:SetSize(22, 22)
     display.lockButton:SetFrameLevel((chrome:GetFrameLevel() or 0) + 2)
     display.lockButton:SetPoint("RIGHT", chrome, "RIGHT", -4, 0)
@@ -682,13 +681,13 @@ function Drawer:ApplyLockUI(skipFade)
     if display.countLabel then display.countLabel:SetShown(showChrome) end
     if display.infoButton then display.infoButton:SetShown(showChrome) end
 
-    -- Lock icon fades in/out using the same duration as the drawer
-    -- chrome instead of snapping instantly. When called from
-    -- EvaluateFade with skipFade=true, the fade is deferred to
-    -- Apply() so it goes through the same delay path as chrome.
+    -- Lock visibility:
+    -- Unlocked: parented to chromeGroup, fades with chrome automatically.
+    -- Locked: reparent to display so it's independent of chrome, show on hover only.
     if lb then
-        lb:SetShown(true)
-        if not skipFade then
+        if locked then
+            lb:SetParent(display)
+            lb:SetShown(true)
             local targetAlpha = hovered and 1 or 0
             local currentAlpha = lb:GetAlpha()
             if math.abs(currentAlpha - targetAlpha) > 0.01 then
@@ -700,6 +699,10 @@ function Drawer:ApplyLockUI(skipFade)
                     endAlpha = targetAlpha,
                 })
             end
+        else
+            lb:SetParent(display.chromeGroup)
+            lb:SetShown(true)
+            -- Alpha is inherited from chromeGroup automatically
         end
     end
 end
@@ -1016,21 +1019,9 @@ function Drawer:EvaluateFade(force)
             state.chrome = chromeTarget
         end
 
-        -- Lock button — fade in sync with chrome (same duration)
-        local lb = f.displayFrame and f.displayFrame.lockButton
-        if lb then
-            local hovered = Drawer:IsHovered()
-            local lockTarget = hovered and 1 or 0
-            local lockCurrent = lb:GetAlpha()
-            if math.abs(lockCurrent - lockTarget) > 0.01 then
-                UIFrameFade(lb, {
-                    mode = lockTarget > lockCurrent and "IN" or "OUT",
-                    timeToFade = duration,
-                    startAlpha = lockCurrent,
-                    endAlpha = lockTarget,
-                })
-            end
-        end
+        -- Lock button: when unlocked, it's parented to chromeGroup so
+        -- it fades automatically with the chrome. When locked, ApplyLockUI
+        -- handles its visibility via hover detection.
 
         -- Widget slot title bars and backgrounds (per-widget settings,
         -- with global overrides). These aren't tweened per-slot — they

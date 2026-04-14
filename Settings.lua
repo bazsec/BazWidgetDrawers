@@ -378,7 +378,7 @@ local function GetWidgetsOptionsTable()
             widgets = {
                 order = 1,
                 type = "group",
-                name = "Widgets",
+                name = "",
                 args = widgetArgs,
             },
         },
@@ -408,6 +408,7 @@ end
 
 local function GetModulesOptionsTable()
     return BazCore:CreateModulesPage("BazWidgetDrawers", {
+        title = "Enable/Disable",
         description = "Enable or disable widgets. Disabled widgets are hidden entirely - not docked in the drawer, not floating, not visible anywhere. Re-enable to restore.",
         getModules = function()
             local list = {}
@@ -426,6 +427,234 @@ local function GetModulesOptionsTable()
             end
         end,
     })
+end
+
+---------------------------------------------------------------------------
+-- Drawers subcategory (create/manage/configure drawer tabs)
+---------------------------------------------------------------------------
+
+local AUTO_SWITCH_OPTIONS = {
+    { value = "",              label = "None (manual only)" },
+    { value = "openWorld",     label = "Open World / Questing" },
+    { value = "dungeon",      label = "Dungeon (5-man)" },
+    { value = "raid",         label = "Raid" },
+    { value = "challengeMode", label = "Mythic+ (Challenge Mode)" },
+    { value = "delve",        label = "Delve" },
+    { value = "battleground",  label = "Battleground" },
+    { value = "arena",        label = "Arena" },
+}
+
+local function BuildDrawerGroup(drawerDef, drawerId, index, total)
+    local allWidgets = BazCore.GetDockableWidgets and BazCore:GetDockableWidgets() or {}
+
+    -- Build auto-switch dropdown values
+    local autoValues = {}
+    for _, opt in ipairs(AUTO_SWITCH_OPTIONS) do
+        autoValues[opt.value] = opt.label
+    end
+
+    local args = {
+        labelInput = {
+            order = 1,
+            type = "input",
+            name = "Label",
+            desc = "Display name shown in the tab tooltip.",
+            get = function()
+                local def = addon:GetDrawer(drawerId)
+                return def and def.label or ""
+            end,
+            set = function(_, val)
+                addon:RenameDrawer(drawerId, val)
+                BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+            end,
+        },
+        chooseIcon = {
+            order = 2,
+            type = "execute",
+            name = "Choose Icon",
+            desc = "Pick an icon for this drawer's tab.",
+            width = "half",
+            func = function()
+                BazCore:ShowIconPicker(function(iconId)
+                    local drawers = addon:GetSetting("drawers") or {}
+                    if drawers[drawerId] then
+                        drawers[drawerId].icon = iconId
+                        addon:SetSetting("drawers", drawers)
+                        if addon.Drawer and addon.Drawer.RefreshTabs then
+                            addon.Drawer:RefreshTabs()
+                        end
+                        BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+                    end
+                end, drawerDef.icon)
+            end,
+        },
+        iconPreview = {
+            order = 2.5,
+            type = "description",
+            name = "|T" .. (drawerDef.icon or "Interface\\Icons\\INV_Misc_QuestionMark") .. ":32:32|t",
+        },
+
+        autoHeader = { order = 10, type = "header", name = "Auto-Switch" },
+        autoSwitchEnabled = {
+            order = 11,
+            type = "toggle",
+            name = "Enable Auto-Switch",
+            desc = "Automatically switch to this drawer when entering the selected game context.",
+            get = function()
+                local def = addon:GetDrawer(drawerId)
+                return def and def.autoSwitchEnabled or false
+            end,
+            set = function(_, val)
+                local drawers = addon:GetSetting("drawers") or {}
+                if drawers[drawerId] then
+                    drawers[drawerId].autoSwitchEnabled = val
+                    addon:SetSetting("drawers", drawers)
+                end
+            end,
+        },
+        autoSwitchTrigger = {
+            order = 12,
+            type = "select",
+            name = "Trigger",
+            desc = "Game context that activates this drawer.",
+            values = autoValues,
+            get = function()
+                local def = addon:GetDrawer(drawerId)
+                return def and def.autoSwitch or ""
+            end,
+            set = function(_, val)
+                local drawers = addon:GetSetting("drawers") or {}
+                if drawers[drawerId] then
+                    drawers[drawerId].autoSwitch = (val ~= "") and val or nil
+                    addon:SetSetting("drawers", drawers)
+                end
+            end,
+            disabled = function()
+                local def = addon:GetDrawer(drawerId)
+                return not (def and def.autoSwitchEnabled)
+            end,
+        },
+
+        widgetHeader = { order = 20, type = "header", name = "Widgets" },
+        widgetDesc = {
+            order = 21,
+            type = "description",
+            name = "Check which widgets appear in this drawer. A widget can be in multiple drawers.",
+        },
+    }
+
+    -- Add a toggle for each available widget
+    local widgetOrder = 22
+    for _, w in ipairs(allWidgets) do
+        local wid = w.id
+        args["widget_" .. wid] = {
+            order = widgetOrder,
+            type = "toggle",
+            name = w.label or wid,
+            get = function()
+                return addon:IsWidgetInDrawer(drawerId, wid)
+            end,
+            set = function(_, val)
+                if val then
+                    addon:AddWidgetToDrawer(drawerId, wid)
+                else
+                    addon:RemoveWidgetFromDrawer(drawerId, wid)
+                end
+                BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+            end,
+        }
+        widgetOrder = widgetOrder + 1
+    end
+
+    -- Also include dormant widgets
+    local LBW = LibStub and LibStub("LibBazWidget-1.0", true)
+    if LBW and LBW.dormant then
+        local seen = {}
+        for _, w in ipairs(allWidgets) do seen[w.id] = true end
+        for id, entry in pairs(LBW.dormant) do
+            if not seen[id] then
+                local wid = id
+                local wLabel = entry.widget and entry.widget.label or id
+                args["widget_" .. wid] = {
+                    order = widgetOrder,
+                    type = "toggle",
+                    name = wLabel .. "  [D]",
+                    get = function()
+                        return addon:IsWidgetInDrawer(drawerId, wid)
+                    end,
+                    set = function(_, val)
+                        if val then
+                            addon:AddWidgetToDrawer(drawerId, wid)
+                        else
+                            addon:RemoveWidgetFromDrawer(drawerId, wid)
+                        end
+                    end,
+                }
+                widgetOrder = widgetOrder + 1
+            end
+        end
+    end
+
+    -- Delete button (can't delete last drawer)
+    local drawerCount = 0
+    local drawers = addon:GetSetting("drawers") or {}
+    for _ in pairs(drawers) do drawerCount = drawerCount + 1 end
+
+    args.deleteHeader = { order = 100, type = "header", name = "" }
+    args.deleteDrawer = {
+        order = 101,
+        type = "execute",
+        name = "Delete This Drawer",
+        desc = "Permanently remove this drawer tab.",
+        func = function()
+            addon:DeleteDrawer(drawerId)
+            BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+        end,
+        disabled = function() return drawerCount <= 1 end,
+        confirm = true,
+        confirmText = "Are you sure you want to delete the '" .. (drawerDef.label or drawerId) .. "' drawer?",
+    }
+
+    return {
+        order = index,
+        type = "group",
+        name = drawerDef.label or drawerId,
+        args = args,
+    }
+end
+
+local function GetDrawersOptionsTable()
+    local sorted = addon:GetSortedDrawers()
+    local drawerArgs = {}
+
+    for i, entry in ipairs(sorted) do
+        drawerArgs["drawer_" .. entry.id] = BuildDrawerGroup(entry.def, entry.id, i, #sorted)
+    end
+
+    return {
+        name = "Drawers",
+        type = "group",
+        args = {
+            createDrawer = {
+                order = 0,
+                type = "execute",
+                name = "Create New Drawer",
+                func = function()
+                    -- Generate a unique ID
+                    local id = "drawer_" .. time()
+                    addon:CreateDrawer(id, "New Drawer")
+                    addon:SetActiveDrawer(id)
+                    BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+                end,
+            },
+            drawers = {
+                order = 1,
+                type = "group",
+                name = "",
+                args = drawerArgs,
+            },
+        },
+    }
 end
 
 ---------------------------------------------------------------------------
@@ -625,11 +854,15 @@ BazCore:QueueForLogin(function()
     BazCore:RegisterOptionsTable("BazWidgetDrawers-GlobalOptions", GetGlobalOptionsTable)
     BazCore:AddToSettings("BazWidgetDrawers-GlobalOptions", "Global Options", "BazWidgetDrawers")
 
-    -- Modules subcategory (flat enable/disable toggles, built by BazCore)
-    BazCore:RegisterOptionsTable("BazWidgetDrawers-Modules", GetModulesOptionsTable)
-    BazCore:AddToSettings("BazWidgetDrawers-Modules", "Modules", "BazWidgetDrawers")
+    -- Drawers subcategory (create/manage drawer tabs)
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-Drawers", GetDrawersOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-Drawers", "Drawers", "BazWidgetDrawers")
 
     -- Widgets subcategory (list/detail - same shape as BazBars' Bar Options)
     BazCore:RegisterOptionsTable("BazWidgetDrawers-Widgets", GetWidgetsOptionsTable)
     BazCore:AddToSettings("BazWidgetDrawers-Widgets", "Widgets", "BazWidgetDrawers")
+
+    -- Enable/Disable subcategory (flat enable/disable toggles)
+    BazCore:RegisterOptionsTable("BazWidgetDrawers-Modules", GetModulesOptionsTable)
+    BazCore:AddToSettings("BazWidgetDrawers-Modules", "Enable/Disable", "BazWidgetDrawers")
 end)

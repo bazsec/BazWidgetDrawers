@@ -13,11 +13,8 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
     savedVariable = "BazWidgetDrawersDB",
     profiles = true,
     defaults = {
-        collapsed = false,
         side = "right",
         width = 222,
-        widgetCollapsed = {},         -- [widgetId] = true when the widget's content is hidden
-        widgetOrder = {},             -- [widgetId] = numeric order index (lower = higher in the stack)
         widgetSettings = {},          -- [widgetId] = { [key] = value } for widget-specific options
         widgetGlobalOverrides = {},   -- [key] = { enabled = bool, value = <any> } (BazCore global page)
         widgetFloating = {},          -- [widgetId] = true when detached from the drawer into free Edit Mode
@@ -37,10 +34,13 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
         fadeTabWhenClosed   = true,  -- whether the tab fades too when drawer is collapsed
         disableFadeInCombat = false, -- force full opacity while in combat
 
-        -- Lock: when true, the drawer ignores user interactions that
-        -- would collapse/expand it (toggle button click and edge-hover
-        -- auto-reveal). Widgets inside are unaffected.
+        -- Lock
         locked = false,
+
+        -- Multi-drawer
+        transitionStyle = "instant", -- "instant", "fade", "slide"
+        activeDrawer = "default",
+        drawers = {},                -- populated by migration on first load
     },
 
     slash = { "/bwd" },
@@ -84,6 +84,28 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
             BazWidgetDrawersDB = BazDrawerDB
         end
 
+        -- Multi-drawer migration: create "default" drawer from flat settings.
+        -- Widget list is set to "*" (all) so it dynamically includes every
+        -- registered widget. This avoids timing issues where widgets haven't
+        -- registered yet at onReady time.
+        local drawers = self:GetSetting("drawers")
+        if not drawers or not next(drawers) then
+            self:SetSetting("drawers", {
+                default = {
+                    label = "Default",
+                    icon = "Interface\\Icons\\INV_Misc_Gear_01",
+                    order = 1,
+                    collapsed = self:GetSetting("collapsed") or false,
+                    autoSwitch = nil,
+                    autoSwitchEnabled = false,
+                    widgets = "*",  -- special: means "all registered widgets"
+                    widgetOrder = self:GetSetting("widgetOrder") or {},
+                    widgetCollapsed = self:GetSetting("widgetCollapsed") or {},
+                },
+            })
+            self:SetSetting("activeDrawer", "default")
+        end
+
         self:SetupDrawer()
     end,
 })
@@ -92,9 +114,9 @@ function addon:SetupDrawer()
     if not self.Drawer then return end
     self.Drawer:Build()
 
-    -- Restore saved collapsed state
-    local saved = self:GetSetting("collapsed")
-    if saved then
+    -- Restore saved collapsed state from the active drawer
+    local drawer = self:GetActiveDrawerDef()
+    if drawer and drawer.collapsed then
         self.Drawer:Collapse()
     else
         self.Drawer:Expand()
@@ -102,46 +124,232 @@ function addon:SetupDrawer()
 end
 
 ---------------------------------------------------------------------------
--- Widget collapsed state (per-widget, persisted)
+-- Multi-drawer API
+--
+-- Each drawer has its own widget assignment, order, and collapsed states.
+-- Global settings (side, width, fade, lock) are shared across all drawers.
+---------------------------------------------------------------------------
+
+function addon:GetActiveDrawerId()
+    return self:GetSetting("activeDrawer") or "default"
+end
+
+function addon:GetActiveDrawerDef()
+    local drawers = self:GetSetting("drawers") or {}
+    return drawers[self:GetActiveDrawerId()]
+end
+
+function addon:GetDrawers()
+    return self:GetSetting("drawers") or {}
+end
+
+function addon:GetDrawer(id)
+    local drawers = self:GetSetting("drawers") or {}
+    return drawers[id]
+end
+
+function addon:GetSortedDrawers()
+    local drawers = self:GetSetting("drawers") or {}
+    local sorted = {}
+    for id, def in pairs(drawers) do
+        sorted[#sorted + 1] = { id = id, def = def }
+    end
+    table.sort(sorted, function(a, b)
+        return (a.def.order or 100) < (b.def.order or 100)
+    end)
+    return sorted
+end
+
+function addon:SetActiveDrawer(id)
+    local drawers = self:GetSetting("drawers") or {}
+    if not drawers[id] then return end
+    self:SetSetting("activeDrawer", id)
+    if self.WidgetHost and self.WidgetHost.Reflow then
+        self.WidgetHost:Reflow()
+    end
+    if self.Drawer and self.Drawer.RefreshTabs then
+        self.Drawer:RefreshTabs()
+    end
+end
+
+function addon:CreateDrawer(id, label, icon)
+    local drawers = self:GetSetting("drawers") or {}
+    if drawers[id] then return end
+    -- Find the next order number
+    local maxOrder = 0
+    for _, def in pairs(drawers) do
+        if (def.order or 0) > maxOrder then maxOrder = def.order end
+    end
+    drawers[id] = {
+        label = label or id,
+        icon = icon or "Interface\\Icons\\INV_Misc_QuestionMark",
+        order = maxOrder + 1,
+        collapsed = true,
+        autoSwitch = nil,
+        autoSwitchEnabled = false,
+        widgets = {},
+        widgetOrder = {},
+        widgetCollapsed = {},
+    }
+    self:SetSetting("drawers", drawers)
+    if self.Drawer and self.Drawer.RefreshTabs then
+        self.Drawer:RefreshTabs()
+    end
+end
+
+function addon:DeleteDrawer(id)
+    local drawers = self:GetSetting("drawers") or {}
+    -- Can't delete the last drawer
+    local count = 0
+    for _ in pairs(drawers) do count = count + 1 end
+    if count <= 1 then return end
+    drawers[id] = nil
+    self:SetSetting("drawers", drawers)
+    -- If we deleted the active drawer, switch to the first remaining one
+    if self:GetActiveDrawerId() == id then
+        for remainingId in pairs(drawers) do
+            self:SetActiveDrawer(remainingId)
+            break
+        end
+    end
+    if self.Drawer and self.Drawer.RefreshTabs then
+        self.Drawer:RefreshTabs()
+    end
+end
+
+function addon:RenameDrawer(id, label)
+    local drawers = self:GetSetting("drawers") or {}
+    if not drawers[id] then return end
+    drawers[id].label = label
+    self:SetSetting("drawers", drawers)
+    if self.Drawer and self.Drawer.RefreshTabs then
+        self.Drawer:RefreshTabs()
+    end
+end
+
+function addon:IsWidgetInDrawer(drawerId, widgetId)
+    local drawers = self:GetSetting("drawers") or {}
+    local def = drawers[drawerId]
+    if not def or not def.widgets then return false end
+    if def.widgets == "*" then return true end
+    for _, wid in ipairs(def.widgets) do
+        if wid == widgetId then return true end
+    end
+    return false
+end
+
+function addon:AddWidgetToDrawer(drawerId, widgetId)
+    local drawers = self:GetSetting("drawers") or {}
+    local def = drawers[drawerId]
+    if not def then return end
+    def.widgets = def.widgets or {}
+    -- Don't add duplicates
+    for _, wid in ipairs(def.widgets) do
+        if wid == widgetId then return end
+    end
+    def.widgets[#def.widgets + 1] = widgetId
+    self:SetSetting("drawers", drawers)
+    if drawerId == self:GetActiveDrawerId() then
+        if self.WidgetHost and self.WidgetHost.Reflow then
+            self.WidgetHost:Reflow()
+        end
+    end
+end
+
+function addon:RemoveWidgetFromDrawer(drawerId, widgetId)
+    local drawers = self:GetSetting("drawers") or {}
+    local def = drawers[drawerId]
+    if not def or not def.widgets then return end
+    -- If wildcard, convert to explicit list first
+    if def.widgets == "*" then
+        local allWidgets = BazCore.GetDockableWidgets and BazCore:GetDockableWidgets() or {}
+        local explicit = {}
+        for _, w in ipairs(allWidgets) do
+            explicit[#explicit + 1] = w.id
+        end
+        def.widgets = explicit
+    end
+    for i, wid in ipairs(def.widgets) do
+        if wid == widgetId then
+            table.remove(def.widgets, i)
+            break
+        end
+    end
+    self:SetSetting("drawers", drawers)
+    if drawerId == self:GetActiveDrawerId() then
+        if self.WidgetHost and self.WidgetHost.Reflow then
+            self.WidgetHost:Reflow()
+        end
+    end
+end
+
+---------------------------------------------------------------------------
+-- Widget collapsed state (per-drawer, per-widget)
 ---------------------------------------------------------------------------
 
 function addon:IsWidgetCollapsed(id)
-    local map = self:GetSetting("widgetCollapsed")
+    local drawer = self:GetActiveDrawerDef()
+    if not drawer then return false end
+    local map = drawer.widgetCollapsed
     return (map and map[id]) and true or false
 end
 
 function addon:SetWidgetCollapsed(id, val)
-    local map = self:GetSetting("widgetCollapsed") or {}
-    map[id] = val and true or nil
-    self:SetSetting("widgetCollapsed", map)
+    local drawers = self:GetSetting("drawers") or {}
+    local drawerId = self:GetActiveDrawerId()
+    local def = drawers[drawerId]
+    if not def then return end
+    def.widgetCollapsed = def.widgetCollapsed or {}
+    def.widgetCollapsed[id] = val and true or nil
+    self:SetSetting("drawers", drawers)
 end
 
 ---------------------------------------------------------------------------
--- Widget ordering (per-widget, persisted)
---
--- The drawer's WidgetHost sorts widgets by their stored order index.
--- Widgets without a stored order fall to the bottom in their natural
--- registration order.
+-- Widget ordering (per-drawer, per-widget)
 ---------------------------------------------------------------------------
 
 function addon:GetWidgetOrder(id)
-    local map = self:GetSetting("widgetOrder")
+    local drawer = self:GetActiveDrawerDef()
+    if not drawer then return nil end
+    local map = drawer.widgetOrder
     return map and map[id]
 end
 
 function addon:SetWidgetOrder(id, n)
-    local map = self:GetSetting("widgetOrder") or {}
-    map[id] = n
-    self:SetSetting("widgetOrder", map)
+    local drawers = self:GetSetting("drawers") or {}
+    local drawerId = self:GetActiveDrawerId()
+    local def = drawers[drawerId]
+    if not def then return end
+    def.widgetOrder = def.widgetOrder or {}
+    def.widgetOrder[id] = n
+    self:SetSetting("drawers", drawers)
 end
 
--- Returns an array of widget tables sorted by the user's saved order.
+-- Returns widget tables for the active drawer, sorted by order.
 function addon:GetSortedWidgets()
-    local widgets = BazCore.GetDockableWidgets and BazCore:GetDockableWidgets() or {}
+    local allWidgets = BazCore.GetDockableWidgets and BazCore:GetDockableWidgets() or {}
+    local drawer = self:GetActiveDrawerDef()
+    if not drawer or not drawer.widgets then return {} end
+
     local copy = {}
-    for i, w in ipairs(widgets) do
-        copy[i] = w
+    if drawer.widgets == "*" then
+        -- Wildcard: include all registered widgets
+        for _, w in ipairs(allWidgets) do
+            copy[#copy + 1] = w
+        end
+    else
+        -- Build a set of widget IDs assigned to the active drawer
+        local assigned = {}
+        for _, wid in ipairs(drawer.widgets) do
+            assigned[wid] = true
+        end
+        for _, w in ipairs(allWidgets) do
+            if assigned[w.id] then
+                copy[#copy + 1] = w
+            end
+        end
     end
+
     table.sort(copy, function(a, b)
         local oa = addon:GetWidgetOrder(a.id) or 10000
         local ob = addon:GetWidgetOrder(b.id) or 10000
@@ -181,6 +389,23 @@ function addon:MoveWidgetDown(id)
             return
         end
     end
+end
+
+---------------------------------------------------------------------------
+-- Drawer collapsed state (per-drawer)
+---------------------------------------------------------------------------
+
+function addon:IsDrawerCollapsed(drawerId)
+    local def = self:GetDrawer(drawerId or self:GetActiveDrawerId())
+    return def and def.collapsed or false
+end
+
+function addon:SetDrawerCollapsed(drawerId, val)
+    local drawers = self:GetSetting("drawers") or {}
+    local def = drawers[drawerId or self:GetActiveDrawerId()]
+    if not def then return end
+    def.collapsed = val and true or false
+    self:SetSetting("drawers", drawers)
 end
 
 ---------------------------------------------------------------------------

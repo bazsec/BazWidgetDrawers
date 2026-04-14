@@ -9,6 +9,20 @@ local addon = BazCore:GetAddon("BazWidgetDrawers")
 local Drawer = {}
 addon.Drawer = Drawer
 
+-- Helper: check if the mouse is over the drawer, toggle button, or tab strip
+function Drawer:IsHovered()
+    local f = self.frame
+    if not f then return false end
+    if f:IsMouseOver() then return true end
+    if f.toggleButton and f.toggleButton:IsShown() and f.toggleButton:IsMouseOver() then return true end
+    if self._tabStrip and self._tabStrip:IsShown() then
+        for _, tab in ipairs(self._tabStrip._tabs) do
+            if tab:IsShown() and tab:IsMouseOver() then return true end
+        end
+    end
+    return false
+end
+
 local MIN_WIDTH = 120
 local MAX_WIDTH = 400
 local DEFAULT_WIDTH = 222
@@ -192,15 +206,19 @@ function Drawer:Build()
         addon.WidgetHost:Initialize(host)
     end
 
-    -- Toggle tab (single custom button matching the drawer's tooltip chrome)
+    -- Legacy toggle button (hidden — replaced by tab strip)
     f.toggleButton = self:BuildToggleButton("BazWidgetDrawersToggleButton", f)
+    f.toggleButton:Hide()
+
+    self.frame = f
+
+    -- Tab strip replaces the pull-tab
+    self:BuildTabStrip()
 
     -- Keep drawer sized to screen height on display changes
     f:RegisterEvent("DISPLAY_SIZE_CHANGED")
     f:RegisterEvent("UI_SCALE_CHANGED")
     f:SetScript("OnEvent", function() Drawer:ApplySide() end)
-
-    self.frame = f
     self:ApplySide()
     self:SetupEdgeHotZone()
     self:SetupFadeController()
@@ -240,9 +258,11 @@ function Drawer:ApplySide()
     local topPoint, bottomPoint, expandedX, collapsedX
     local tabSelf, tabRelative, flipTab, tabXOffset
 
+    local EDGE_HIDE = 8  -- push frame off-screen to hide the border edge
+
     if side == "left" then
         topPoint, bottomPoint = "TOPLEFT", "BOTTOMLEFT"
-        expandedX = 0
+        expandedX = -EDGE_HIDE
         collapsedX = -width
         tabSelf = "LEFT"                    -- tab's left anchors to drawer's right edge
         tabRelative = "RIGHT"
@@ -250,7 +270,7 @@ function Drawer:ApplySide()
         tabXOffset = -TAB_BORDER_INSET      -- push tab left into the border
     else -- right
         topPoint, bottomPoint = "TOPRIGHT", "BOTTOMRIGHT"
-        expandedX = 0
+        expandedX = EDGE_HIDE
         collapsedX = width
         tabSelf = "RIGHT"                   -- tab's right anchors to drawer's left edge
         tabRelative = "LEFT"
@@ -283,13 +303,13 @@ function Drawer:ApplySide()
     f:SetPoint(topPoint, UIParent, topPoint, x, 0)
     f:SetPoint(bottomPoint, UIParent, bottomPoint, x, 0)
 
-    -- Tab handle hangs outside the drawer's inner edge, vertically centered.
+    -- Legacy toggle button — kept for structure but hidden (tabs replace it)
     f.toggleButton:ClearAllPoints()
     f.toggleButton:SetPoint(tabSelf, f, tabRelative, tabXOffset, 0)
-    ApplyToggleAtlases(
-        f.toggleButton,
-        self.collapsed and prefixCollapsed or prefixExpanded,
-        flipTab)
+    f.toggleButton:Hide()
+
+    -- Refresh tab strip positioning for the current side
+    self:RefreshTabs()
 end
 
 ---------------------------------------------------------------------------
@@ -300,9 +320,10 @@ function Drawer:Expand()
     self.collapsed = false
     self:ApplySide()
     if self.frame then self.frame.displayFrame:Show() end
-    addon:SetSetting("collapsed", false)
+    addon:SetDrawerCollapsed(nil, false)
     if self._edgeHotZone then self._edgeHotZone:Hide() end
     if self.EvaluateFade then self:EvaluateFade(true) end
+    self:RefreshTabs()
 end
 
 function Drawer:Collapse()
@@ -311,15 +332,203 @@ function Drawer:Collapse()
     self.collapsed = true
     self:ApplySide()
     if self.frame then self.frame.displayFrame:Hide() end
-    addon:SetSetting("collapsed", true)
+    addon:SetDrawerCollapsed(nil, true)
     if self._edgeHotZone then self._edgeHotZone:Show() end
     if self.EvaluateFade then self:EvaluateFade(true) end
+    self:RefreshTabs()
 end
 
 function Drawer:Toggle()
     -- Locked: ignore click/key requests to toggle.
     if addon:GetSetting("locked") then return end
     if self.collapsed then self:Expand() else self:Collapse() end
+end
+
+---------------------------------------------------------------------------
+-- Tab strip — vertical stack of text tabs on the drawer edge.
+--
+-- When all drawers are collapsed: all tabs visible (pick which to open).
+-- When one is open: only that drawer's tab visible (click to close).
+-- Tabs fade with the drawer chrome and are hidden when locked.
+---------------------------------------------------------------------------
+
+function Drawer:BuildTabStrip()
+    local f = self.frame; if not f then return end
+
+    if not self._tabStrip then
+        self._tabStrip = CreateFrame("Frame", nil, f)
+        self._tabStrip:SetFrameStrata("MEDIUM")
+        self._tabStrip:SetFrameLevel((f:GetFrameLevel() or 0) + 6)
+        self._tabStrip._tabs = {}
+    end
+
+    self:RefreshTabs()
+end
+
+function Drawer:RefreshTabs()
+    local f = self.frame; if not f then return end
+    local strip = self._tabStrip; if not strip then return end
+
+    -- Hide all existing tabs
+    for _, tab in ipairs(strip._tabs) do
+        tab:Hide()
+    end
+
+    local sorted = addon:GetSortedDrawers()
+    local activeId = addon:GetActiveDrawerId()
+    local isExpanded = not self.collapsed
+    local locked = addon:GetSetting("locked")
+
+    local side = addon:GetSetting("side") or "right"
+    local flipTab = (side == "left")
+    local tabSelf, tabRelative, tabXOffset
+    if side == "left" then
+        tabSelf = "TOPLEFT"
+        tabRelative = "TOPRIGHT"
+        tabXOffset = -2
+    else
+        tabSelf = "TOPRIGHT"
+        tabRelative = "TOPLEFT"
+        tabXOffset = 2
+    end
+
+    local TAB_SIZE = 32
+    local TAB_BORDER_SIZE = 64
+    local TAB_ICON_SIZE = 30
+    local TAB_GAP = 12
+
+    -- Calculate total strip height to center vertically
+    local totalTabs = #sorted
+    local totalStripH = (totalTabs * TAB_SIZE) + ((totalTabs - 1) * TAB_GAP)
+    local frameH = f:GetHeight() or 0
+    local tabY = -(frameH / 2) + (totalStripH / 2)
+
+    for i, entry in ipairs(sorted) do
+        local drawerId = entry.id
+        local def = entry.def
+        local isActive = (drawerId == activeId)
+
+        -- When expanded, only show the active tab but still
+        -- advance tabY so the active tab stays in its natural position.
+        if isExpanded and not isActive then
+            tabY = tabY - TAB_SIZE - TAB_GAP
+        else
+            local tab = strip._tabs[i]
+            if not tab then
+                tab = CreateFrame("CheckButton", nil, strip)
+                tab:SetSize(TAB_SIZE, TAB_SIZE)
+                tab:SetFrameLevel((strip:GetFrameLevel() or 0) + 1)
+
+                -- SpellBook-SkillLineTab border (same as guild/communities side tabs)
+                -- Flipped horizontally when on the right side so the tab
+                -- hangs off the drawer's inner edge correctly.
+                tab.border = tab:CreateTexture(nil, "BORDER")
+                tab.border:SetSize(TAB_BORDER_SIZE, TAB_BORDER_SIZE)
+                tab.border:SetTexture("Interface\\SpellBook\\SpellBook-SkillLineTab")
+                if flipTab then
+                    -- Left side: native orientation (tab hangs right)
+                    tab.border:SetPoint("TOPLEFT", -3, 11)
+                else
+                    -- Right side: flip horizontally (tab hangs left)
+                    tab.border:SetPoint("TOPRIGHT", 3, 11)
+                    tab.border:SetTexCoord(1, 0, 0, 1)
+                end
+
+                -- Icon centered
+                tab.icon = tab:CreateTexture(nil, "ARTWORK")
+                tab.icon:SetSize(TAB_ICON_SIZE, TAB_ICON_SIZE)
+                tab.icon:SetPoint("CENTER", 0, 0)
+                tab.icon:SetTexCoord(0.03125, 0.96875, 0.03125, 0.96875)
+
+                -- Proc glow on hover (Blizzard's animated overlay glow)
+
+
+                tab:SetScript("OnEnter", function(self)
+                    BazCore:ShowGlow(self)
+                    self.icon:SetDesaturated(false)
+                    self.icon:SetAlpha(1.0)
+                    if not addon:GetSetting("locked") then
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        GameTooltip:SetText(self._label or "")
+                        GameTooltip:Show()
+                    end
+                end)
+                tab:SetScript("OnLeave", function(self)
+                    BazCore:HideGlow(self)
+                    -- Only stay colored if this is the active tab AND drawer is open
+                    if not (self._isActive and not Drawer.collapsed) then
+                        self.icon:SetDesaturated(true)
+                        self.icon:SetAlpha(0.6)
+                    end
+                    GameTooltip:Hide()
+                end)
+
+                strip._tabs[i] = tab
+            end
+
+            tab._drawerId = drawerId
+            tab._isActive = isActive
+            tab._label = def.label or drawerId
+
+            -- Set icon
+            local iconPath = def.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+            tab.icon:SetTexture(iconPath)
+
+            -- Color logic:
+            -- Active + expanded = full color always
+            -- Everything else (inactive, or active but collapsed) = desaturated
+            -- Hover overrides to full color (handled in OnEnter/OnLeave)
+            if isActive and isExpanded then
+                tab.icon:SetDesaturated(false)
+                tab.icon:SetAlpha(1.0)
+            else
+                tab.icon:SetDesaturated(true)
+                tab.icon:SetAlpha(0.6)
+            end
+
+            tab:SetScript("OnClick", function()
+                if drawerId == activeId then
+                    -- Clicking active tab toggles expand/collapse
+                    Drawer:Toggle()
+                else
+                    -- Switch to a different drawer
+                    -- Collapse current if expanded
+                    if not Drawer.collapsed then
+                        Drawer.collapsed = true
+                        if f.displayFrame then f.displayFrame:Hide() end
+                        addon:SetDrawerCollapsed(activeId, true)
+                    end
+                    -- Switch active drawer
+                    addon:SetActiveDrawer(drawerId)
+                    -- Expand the new drawer
+                    local newDef = addon:GetDrawer(drawerId)
+                    Drawer.collapsed = false
+                    addon:SetDrawerCollapsed(drawerId, false)
+                    Drawer:ApplySide()
+                    if f.displayFrame then f.displayFrame:Show() end
+                    if Drawer._edgeHotZone then Drawer._edgeHotZone:Hide() end
+                    if Drawer.EvaluateFade then Drawer:EvaluateFade(true) end
+                    Drawer:RefreshTabs()
+                end
+            end)
+
+            tab:ClearAllPoints()
+            tab:SetPoint(tabSelf, f, tabRelative, tabXOffset, tabY)
+            tab:Show()
+
+            tabY = tabY - TAB_SIZE - TAB_GAP
+        end
+    end
+
+    -- Size the strip to contain all visible tabs
+    strip:SetSize(TAB_SIZE, math.abs(tabY))
+
+    -- Hide tabs when locked
+    if locked then
+        strip:Hide()
+    else
+        strip:Show()
+    end
 end
 
 ---------------------------------------------------------------------------
@@ -342,7 +551,7 @@ function Drawer:ApplyLockUI(skipFade)
     local display = f.displayFrame; if not display then return end
 
     local locked = addon:GetSetting("locked") and true or false
-    local hovered = f:IsMouseOver() or (f.toggleButton and f.toggleButton:IsMouseOver())
+    local hovered = Drawer:IsHovered()
 
     -- Swap the lock icon's atlas based on state
     local lb = display.lockButton
@@ -610,7 +819,7 @@ function Drawer:ComputeFadeTargets()
         return FullState()
     end
 
-    local hovered = f:IsMouseOver() or (f.toggleButton and f.toggleButton:IsMouseOver())
+    local hovered = Drawer:IsHovered()
     if hovered then return FullState() end
 
     if self.collapsed then
@@ -668,6 +877,15 @@ function Drawer:EvaluateFade(force)
                 startAlpha = tab:GetAlpha() or 1,
                 endAlpha = tabTarget,
             })
+            -- Fade the tab strip in sync
+            if Drawer._tabStrip then
+                UIFrameFade(Drawer._tabStrip, {
+                    mode = (tabTarget > (Drawer._tabStrip:GetAlpha() or 1)) and "IN" or "OUT",
+                    timeToFade = duration,
+                    startAlpha = Drawer._tabStrip:GetAlpha() or 1,
+                    endAlpha = tabTarget,
+                })
+            end
             state.tab = tabTarget
         end
 
@@ -686,7 +904,7 @@ function Drawer:EvaluateFade(force)
         -- Lock button — fade in sync with chrome (same duration)
         local lb = f.displayFrame and f.displayFrame.lockButton
         if lb then
-            local hovered = f:IsMouseOver() or (f.toggleButton and f.toggleButton:IsMouseOver())
+            local hovered = Drawer:IsHovered()
             local lockTarget = hovered and 1 or 0
             local lockCurrent = lb:GetAlpha()
             if math.abs(lockCurrent - lockTarget) > 0.01 then

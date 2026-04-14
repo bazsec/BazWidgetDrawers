@@ -296,6 +296,12 @@ function Drawer:ApplySide()
         prefixCollapsed = "gm-btnback"    -- native ← (expand left)
     end
 
+    -- Store computed positions for the slide animation
+    self._topPoint = topPoint
+    self._bottomPoint = bottomPoint
+    self._expandedX = expandedX
+    self._collapsedX = collapsedX
+
     local x = self.collapsed and collapsedX or expandedX
 
     -- Anchor both corners so the drawer spans the full screen height
@@ -313,16 +319,86 @@ function Drawer:ApplySide()
 end
 
 ---------------------------------------------------------------------------
--- Expand / Collapse / Toggle
+-- Expand / Collapse / Toggle (with slide animation)
 ---------------------------------------------------------------------------
+
+local SLIDE_DURATION = 0.25  -- seconds for slide animation
+
+function Drawer:SlideToX(targetX, onFinish)
+    local f = self.frame; if not f then return end
+    local topPoint = self._topPoint or "TOPRIGHT"
+    local bottomPoint = self._bottomPoint or "BOTTOMRIGHT"
+
+    -- Get current X from anchor
+    local _, _, _, startX = f:GetPoint(1)
+    if not startX then startX = targetX end
+
+    -- Cancel any running slide
+    if self._slideTimer then
+        self._slideTimer:Cancel()
+        self._slideTimer = nil
+    end
+    if self._slideFrame then
+        self._slideFrame:SetScript("OnUpdate", nil)
+    end
+
+    if math.abs(startX - targetX) < 1 then
+        -- Already at target
+        f:ClearAllPoints()
+        f:SetPoint(topPoint, UIParent, topPoint, targetX, 0)
+        f:SetPoint(bottomPoint, UIParent, bottomPoint, targetX, 0)
+        if onFinish then onFinish() end
+        return
+    end
+
+    if not self._slideFrame then
+        self._slideFrame = CreateFrame("Frame")
+    end
+
+    local elapsed = 0
+    self._slideFrame:SetScript("OnUpdate", function(_, dt)
+        elapsed = elapsed + dt
+        local progress = math.min(elapsed / SLIDE_DURATION, 1)
+        -- Smooth ease-out
+        local eased = 1 - (1 - progress) * (1 - progress)
+        local x = startX + (targetX - startX) * eased
+
+        f:ClearAllPoints()
+        f:SetPoint(topPoint, UIParent, topPoint, x, 0)
+        f:SetPoint(bottomPoint, UIParent, bottomPoint, x, 0)
+
+        if progress >= 1 then
+            self._slideFrame:SetScript("OnUpdate", nil)
+            if onFinish then onFinish() end
+        end
+    end)
+end
 
 function Drawer:Expand()
     self.collapsed = false
-    self:ApplySide()
-    if self.frame then self.frame.displayFrame:Show() end
-    addon:SetDrawerCollapsed(nil, false)
-    if self._edgeHotZone then self._edgeHotZone:Hide() end
-    if self.EvaluateFade then self:EvaluateFade(true) end
+
+    local targetX = self._expandedX or 0
+
+    self:SlideToX(targetX, function()
+        -- Show content AFTER slide completes to avoid child frame lag
+        local display = self.frame and self.frame.displayFrame
+        if display then
+            display:Show()
+            display:SetAlpha(0)
+            UIFrameFade(display, {
+                mode = "IN",
+                timeToFade = 0.15,
+                startAlpha = 0,
+                endAlpha = 1,
+            })
+        end
+        addon:SetDrawerCollapsed(nil, false)
+        if self._edgeHotZone then self._edgeHotZone:Hide() end
+        if self.EvaluateFade then self:EvaluateFade(true) end
+        self:RefreshTabs()
+    end)
+
+    -- Refresh tabs immediately so the active tab colors update
     self:RefreshTabs()
 end
 
@@ -330,12 +406,32 @@ function Drawer:Collapse()
     -- Locked drawers cannot be collapsed by user interaction.
     if addon:GetSetting("locked") then return end
     self.collapsed = true
-    self:ApplySide()
-    if self.frame then self.frame.displayFrame:Hide() end
-    addon:SetDrawerCollapsed(nil, true)
-    if self._edgeHotZone then self._edgeHotZone:Show() end
-    if self.EvaluateFade then self:EvaluateFade(true) end
+
+    local targetX = self._collapsedX or 0
+
+    -- Refresh tabs immediately so all tabs show
     self:RefreshTabs()
+
+    -- Fade out content quickly, then slide
+    local display = self.frame and self.frame.displayFrame
+    if display then
+        UIFrameFade(display, {
+            mode = "OUT",
+            timeToFade = 0.1,
+            startAlpha = display:GetAlpha(),
+            endAlpha = 0,
+            finishedFunc = function()
+                display:Hide()
+                display:SetAlpha(1)
+            end,
+        })
+    end
+
+    self:SlideToX(targetX, function()
+        addon:SetDrawerCollapsed(nil, true)
+        if self._edgeHotZone then self._edgeHotZone:Show() end
+        if self.EvaluateFade then self:EvaluateFade(true) end
+    end)
 end
 
 function Drawer:Toggle()
@@ -425,14 +521,6 @@ function Drawer:RefreshTabs()
                 tab.border = tab:CreateTexture(nil, "BORDER")
                 tab.border:SetSize(TAB_BORDER_SIZE, TAB_BORDER_SIZE)
                 tab.border:SetTexture("Interface\\SpellBook\\SpellBook-SkillLineTab")
-                if flipTab then
-                    -- Left side: native orientation (tab hangs right)
-                    tab.border:SetPoint("TOPLEFT", -3, 11)
-                else
-                    -- Right side: flip horizontally (tab hangs left)
-                    tab.border:SetPoint("TOPRIGHT", 3, 11)
-                    tab.border:SetTexCoord(1, 0, 0, 1)
-                end
 
                 -- Icon centered
                 tab.icon = tab:CreateTexture(nil, "ARTWORK")
@@ -470,6 +558,18 @@ function Drawer:RefreshTabs()
             tab._isActive = isActive
             tab._label = def.label or drawerId
 
+            -- Update border flip for current side (runs every refresh)
+            tab.border:ClearAllPoints()
+            if flipTab then
+                -- Left side drawer: tab hangs to the right (native SpellBook orientation)
+                tab.border:SetPoint("TOPLEFT", -3, 11)
+                tab.border:SetTexCoord(0, 1, 0, 1)
+            else
+                -- Right side drawer: flip horizontally so tab hangs to the left
+                tab.border:SetPoint("TOPRIGHT", 3, 11)
+                tab.border:SetTexCoord(1, 0, 0, 1)
+            end
+
             -- Set icon
             local iconPath = def.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
             tab.icon:SetTexture(iconPath)
@@ -492,23 +592,38 @@ function Drawer:RefreshTabs()
                     Drawer:Toggle()
                 else
                     -- Switch to a different drawer
-                    -- Collapse current if expanded
-                    if not Drawer.collapsed then
-                        Drawer.collapsed = true
-                        if f.displayFrame then f.displayFrame:Hide() end
-                        addon:SetDrawerCollapsed(activeId, true)
-                    end
-                    -- Switch active drawer
                     addon:SetActiveDrawer(drawerId)
-                    -- Expand the new drawer
-                    local newDef = addon:GetDrawer(drawerId)
-                    Drawer.collapsed = false
-                    addon:SetDrawerCollapsed(drawerId, false)
-                    Drawer:ApplySide()
-                    if f.displayFrame then f.displayFrame:Show() end
-                    if Drawer._edgeHotZone then Drawer._edgeHotZone:Hide() end
-                    if Drawer.EvaluateFade then Drawer:EvaluateFade(true) end
-                    Drawer:RefreshTabs()
+                    if Drawer.collapsed then
+                        -- All drawers collapsed — just expand the new one
+                        Drawer:Expand()
+                    else
+                        -- Another drawer is open — swap content instantly
+                        -- (the drawer is already in position)
+                        local display = f.displayFrame
+                        if display then
+                            UIFrameFade(display, {
+                                mode = "OUT",
+                                timeToFade = 0.1,
+                                startAlpha = display:GetAlpha(),
+                                endAlpha = 0,
+                                finishedFunc = function()
+                                    -- Reflow with new drawer's widgets
+                                    if addon.WidgetHost and addon.WidgetHost.Reflow then
+                                        addon.WidgetHost:Reflow()
+                                    end
+                                    -- Fade back in
+                                    UIFrameFade(display, {
+                                        mode = "IN",
+                                        timeToFade = 0.15,
+                                        startAlpha = 0,
+                                        endAlpha = 1,
+                                    })
+                                end,
+                            })
+                        end
+                        Drawer:RefreshTabs()
+                        if Drawer.EvaluateFade then Drawer:EvaluateFade(true) end
+                    end
                 end
             end)
 

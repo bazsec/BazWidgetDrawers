@@ -63,6 +63,62 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
                 if addon.Drawer then addon.Drawer:Collapse() end
             end,
         },
+        open = {
+            desc = "Open a specific drawer by name",
+            usage = "<name>",
+            handler = function(args)
+                if not args or args == "" then
+                    addon:Print("Usage: /bwd open <drawer name>")
+                    local sorted = addon:GetSortedDrawers()
+                    local names = {}
+                    for _, entry in ipairs(sorted) do
+                        names[#names + 1] = entry.def.label or entry.id
+                    end
+                    addon:Print("Available: " .. table.concat(names, ", "))
+                    return
+                end
+                local search = args:lower()
+                local sorted = addon:GetSortedDrawers()
+                for _, entry in ipairs(sorted) do
+                    local label = (entry.def.label or entry.id):lower()
+                    if label == search or label:find(search, 1, true) then
+                        -- Switch to this drawer and expand
+                        addon:SetActiveDrawer(entry.id)
+                        if addon.Drawer then
+                            addon.Drawer.collapsed = false
+                            addon:SetDrawerCollapsed(entry.id, false)
+                            addon.Drawer:ApplySide()
+                            if addon.Drawer.frame and addon.Drawer.frame.displayFrame then
+                                addon.Drawer.frame.displayFrame:Show()
+                            end
+                            if addon.Drawer._edgeHotZone then
+                                addon.Drawer._edgeHotZone:Hide()
+                            end
+                            if addon.Drawer.EvaluateFade then
+                                addon.Drawer:EvaluateFade(true)
+                            end
+                            addon.Drawer:RefreshTabs()
+                        end
+                        addon:Print("Switched to drawer: " .. (entry.def.label or entry.id))
+                        return
+                    end
+                end
+                addon:Print("No drawer found matching '" .. args .. "'")
+            end,
+        },
+        list = {
+            desc = "List all drawers",
+            handler = function()
+                local sorted = addon:GetSortedDrawers()
+                local activeId = addon:GetActiveDrawerId()
+                addon:Print("Drawers:")
+                for _, entry in ipairs(sorted) do
+                    local label = entry.def.label or entry.id
+                    local marker = entry.id == activeId and " |cff44dd44(active)|r" or ""
+                    addon:Print("  " .. label .. marker)
+                end
+            end,
+        },
     },
 
     minimap = {

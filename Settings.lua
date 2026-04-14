@@ -490,8 +490,23 @@ local function BuildDrawerGroup(drawerDef, drawerId, index, total)
         },
         iconPreview = {
             order = 2.5,
-            type = "description",
+            type = "execute",
             name = "|T" .. (drawerDef.icon or "Interface\\Icons\\INV_Misc_QuestionMark") .. ":32:32|t",
+            width = "half",
+            func = function()
+                -- Same as Choose Icon
+                BazCore:ShowIconPicker(function(iconId)
+                    local drawers = addon:GetSetting("drawers") or {}
+                    if drawers[drawerId] then
+                        drawers[drawerId].icon = iconId
+                        addon:SetSetting("drawers", drawers)
+                        if addon.Drawer and addon.Drawer.RefreshTabs then
+                            addon.Drawer:RefreshTabs()
+                        end
+                        BazCore:RefreshOptions("BazWidgetDrawers-Drawers")
+                    end
+                end, drawerDef.icon)
+            end,
         },
 
         autoHeader = { order = 10, type = "header", name = "Auto-Switch" },
@@ -728,10 +743,6 @@ BazCore:QueueForLogin(function()
                 "* Quest Tracker - full tracker replica with Scenario/Campaign/Quest sections, progress bars, quest item buttons, auto-complete popups, and waypoint integration.\n" ..
                 "* Micro Menu - reparents the Blizzard micro menu with fade-on-hover.\n" ..
                 "* Info Bar - clock, calendar, and tracking button in one row.\n\n" ..
-
-                "BAZWIDGETS ADDON PACK (separate addon)\n" ..
-                "* Dungeon Finder - dormant queue status panel (auto-shows when queued).\n" ..
-                "* Repair - three-column durability display with paper-doll modes.\n\n" ..
 
                 "DEVELOPER\n" ..
                 "* LibBazWidget-1.0 - standalone widget registry library via LibStub.\n" ..

@@ -187,9 +187,10 @@ function WidgetHost:CreateSlot(widget)
     local content = CreateFrame("Frame", nil, slot)
     content:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -TITLE_CONTENT_GAP)
     content:SetPoint("TOPRIGHT", title, "BOTTOMRIGHT", 0, -TITLE_CONTENT_GAP)
+    content:SetFrameLevel(slot:GetFrameLevel() + 2)
     slot.content = content
 
-    -- Slot background fills the content area
+    -- Slot background fills the content area (drawn behind content)
     slot.contentBg:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
     slot.contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, 0)
 

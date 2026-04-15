@@ -140,6 +140,11 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
             BazWidgetDrawersDB = BazDrawerDB
         end
 
+        -- First-run defaults: on a brand-new profile, only the curated
+        -- default widgets (Zone, Minimap, Quest Tracker) are enabled.
+        -- Existing profiles keep their old permissive behavior.
+        if addon.ApplyFirstRunDefaults then addon:ApplyFirstRunDefaults() end
+
         -- Multi-drawer migration: create "default" drawer from flat settings.
         -- Widget list is set to "*" (all) so it dynamically includes every
         -- registered widget. This avoids timing issues where widgets haven't
@@ -566,19 +571,63 @@ end
 -- restores the previous dock/float state.
 ---------------------------------------------------------------------------
 
+-- Widgets new characters should see by default. Every other widget
+-- starts disabled for fresh profiles and the user opts in via the
+-- Widgets settings. Existing profiles are unaffected — see
+-- widgetEnableStrict logic below.
+local DEFAULT_ENABLED_WIDGETS = {
+    bazdrawer_zonetext     = true,
+    bazdrawer_minimap      = true,
+    bazdrawer_questtracker = true,
+}
+
 function addon:IsWidgetEnabled(id)
-    local map = self:GetSetting("widgetEnabled")
-    if not map then return true end
-    if map[id] == nil then return true end
-    return map[id] and true or false
+    local map = self:GetSetting("widgetEnabled") or {}
+    if map[id] ~= nil then
+        return map[id] and true or false
+    end
+    -- Unset — fall back to the per-profile default mode.
+    -- Strict mode (fresh profiles) → only the curated allowlist is on.
+    -- Permissive mode (existing profiles pre-migration) → all on.
+    if self:GetSetting("widgetEnableStrict") then
+        return DEFAULT_ENABLED_WIDGETS[id] == true
+    end
+    return true
 end
 
 function addon:SetWidgetEnabled(id, val)
     local map = self:GetSetting("widgetEnabled") or {}
-    if val == false then
-        map[id] = false
-    else
-        map[id] = nil  -- nil = default enabled, keeps SV small
-    end
+    -- Always record an explicit true/false now that "unset" has a
+    -- per-profile meaning — leaving nil would make the value depend
+    -- on strict mode instead of reflecting the user's choice.
+    map[id] = val and true or false
     self:SetSetting("widgetEnabled", map)
+end
+
+-- Apply first-run defaults for a fresh profile.
+-- Runs on onReady. For a brand-new profile (no widget-related saved
+-- state yet), enables strict mode so unset widgets default OFF. For
+-- existing profiles with customizations, leaves permissive mode so
+-- players don't lose widgets they were already seeing.
+function addon:ApplyFirstRunDefaults()
+    if self:GetSetting("widgetEnableStrict") ~= nil then
+        return  -- already migrated
+    end
+    local function nonEmpty(key)
+        local t = self:GetSetting(key)
+        return t and next(t) ~= nil
+    end
+    local hasCustomization =
+           nonEmpty("widgetEnabled")
+        or nonEmpty("widgetSettings")
+        or nonEmpty("widgetFloating")
+        or nonEmpty("widgetPositions")
+    if hasCustomization then
+        -- Existing profile — preserve old permissive behavior so the
+        -- player doesn't wake up with widgets missing.
+        self:SetSetting("widgetEnableStrict", false)
+    else
+        -- Fresh profile — apply the curated default set.
+        self:SetSetting("widgetEnableStrict", true)
+    end
 end

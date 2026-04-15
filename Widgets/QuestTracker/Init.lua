@@ -307,6 +307,20 @@ function QT.Refresh()
         table.insert(groupOrder, bonusGroupIdx)
     end
 
+    -- World Quests (nearby tasks + explicitly watched). Sorted last so
+    -- they sit at the bottom of the tracker, matching Blizzard's order.
+    if QT.GetWorldQuests then
+        local worldQuests = QT.GetWorldQuests()
+        if #worldQuests > 0 then
+            local wqGroupIdx = 250
+            groups[wqGroupIdx] = {
+                label  = _G.TRACKER_HEADER_WORLD_QUESTS or "World Quests",
+                quests = worldQuests,
+            }
+            table.insert(groupOrder, wqGroupIdx)
+        end
+    end
+
     table.sort(groupOrder)
 
     -- Build flat items list
@@ -499,12 +513,20 @@ function QT.Init()
     f:RegisterEvent("SUPER_TRACKING_CHANGED")
     f:RegisterEvent("TRACKED_ACHIEVEMENT_UPDATE")
     f:RegisterEvent("TRACKED_ACHIEVEMENT_LIST_CHANGED")
+    -- CONTENT_TRACKING_UPDATE is the modern event for the
+    -- C_ContentTracking API (used by the Achievement window's
+    -- right-click → Untrack). Without this we'd only catch the
+    -- legacy tracker events and miss untrack actions.
+    f:RegisterEvent("CONTENT_TRACKING_UPDATE")
     f:RegisterEvent("CRITERIA_UPDATE")
     f:RegisterEvent("ACHIEVEMENT_EARNED")
     f:RegisterEvent("SCENARIO_UPDATE")
     f:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
     f:RegisterEvent("SCENARIO_COMPLETED")
     f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    -- World quest events
+    f:RegisterEvent("WORLD_QUEST_COMPLETED_BY_SPELL")
+    f:RegisterEvent("TASK_PROGRESS_UPDATE")
     -- M+ events
     f:RegisterEvent("CHALLENGE_MODE_START")
     f:RegisterEvent("CHALLENGE_MODE_COMPLETED")

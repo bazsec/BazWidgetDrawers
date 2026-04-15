@@ -368,7 +368,7 @@ local function BuildWidgetGroup(widget, index, total)
     local displayName = widget.label or id
     if isDormant then
         local isActive = LBW:IsDormantWidgetActive(id)
-        displayName = displayName .. (isActive and "" or "  [D]")
+        displayName = displayName .. (isActive and "" or "  |cff60ff60[D]|r")
     end
 
     return {
@@ -605,7 +605,7 @@ local function BuildDrawerGroup(drawerDef, drawerId, index, total)
                 args["widget_" .. wid] = {
                     order = widgetOrder,
                     type = "toggle",
-                    name = wLabel .. "  [D]",
+                    name = wLabel .. "  |cff60ff60[D]|r",
                     get = function()
                         return addon:IsWidgetInDrawer(drawerId, wid)
                     end,

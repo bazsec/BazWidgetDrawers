@@ -135,46 +135,90 @@ function QT.CreateBlock()
         block.itemButton = itemBtn
     end
 
-    -- Progress bar — matches Blizzard's ObjectiveTrackerProgressBar
-    -- style with the UI-Character-Skills-BarBorder left/right caps
-    -- and tiled middle border.
-    -- Shorter width than objectives — matches Blizzard's 180px bar
-    -- scaled to our design width proportionally
-    local barW = math.min(180, C.DESIGN_WIDTH - C.PAD * 2 - C.OBJ_INDENT - C.OBJ_RIGHT_PAD)
+    -- Find Group ("green eye") button — same Blizzard template the
+    -- BonusObjectiveTracker uses. Mixin handles the OnClick → opens
+    -- the Premade Group Finder filtered for that WQ.
+    local fgOk, findGroupBtn = pcall(CreateFrame, "Button", nil, block, "QuestObjectiveFindGroupButtonTemplate")
+    if fgOk and findGroupBtn then
+        findGroupBtn:SetPoint("TOPRIGHT", block, "TOPRIGHT", 5, 2)
+        findGroupBtn:Hide()
+        -- The block's title Button spans the full width including under
+        -- the eye, intercepting clicks. Bump our frame level above it
+        -- so we get hover/click on the entire eye, not just the bottom.
+        findGroupBtn:SetFrameLevel((block:GetFrameLevel() or 0) + 10)
+        -- Use the template's default UI-Common-MouseHilight for hover —
+        -- matches Blizzard's native look.
+        block.findGroupBtn = findGroupBtn
+    end
+
+    -- Progress bar — matches Blizzard's bonus-objective bar.
+    -- Atlases (bonusobjectives-bar-frame-5 + bonusobjectives-bar-ring)
+    -- have segment positions baked in. We scale them down ~80% to fit
+    -- our narrower widget while keeping the segments crisp.
+    local SCALE = 0.95
+    local barW = math.floor(191 * SCALE)        -- ~181
+    local barH = math.floor(17 * SCALE)         -- ~16
+    local frameW = math.floor(207 * SCALE)      -- atlas native ~207
+    local frameH = math.floor(38 * SCALE)       -- atlas native ~38
+    local ringSize = math.floor(38 * SCALE)     -- ring atlas native ~38
+
     local bar = CreateFrame("StatusBar", nil, block)
-    bar:SetSize(barW, 13)
+    bar:SetSize(barW, barH)
     bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-    bar:SetStatusBarColor(0.26, 0.42, 0.75, 1)
+    bar:SetStatusBarColor(0.26, 0.42, 1.00, 1)
     bar:SetMinMaxValues(0, 100)
     bar:SetValue(0)
 
     bar.bg = bar:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints()
-    bar.bg:SetColorTexture(0.08, 0.08, 0.10, 0.7)
+    bar.bg:SetColorTexture(0.04, 0.07, 0.18, 1)
 
-    -- Border (left cap, right cap, tiled middle)
-    local BORDER_TEX = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder"
-    bar.borderLeft = bar:CreateTexture(nil, "ARTWORK")
-    bar.borderLeft:SetTexture(BORDER_TEX)
-    bar.borderLeft:SetSize(9, 22)
-    bar.borderLeft:SetTexCoord(0.007843, 0.043137, 0.193548, 0.774193)
-    bar.borderLeft:SetPoint("LEFT", -3, 0)
+    -- Force the status fill texture down to a low layer so our frame
+    -- overlay can sit cleanly on top of it.
+    local statusTex = bar:GetStatusBarTexture()
+    if statusTex and statusTex.SetDrawLayer then
+        statusTex:SetDrawLayer("ARTWORK", -8)
+    end
 
-    bar.borderRight = bar:CreateTexture(nil, "ARTWORK")
-    bar.borderRight:SetTexture(BORDER_TEX)
-    bar.borderRight:SetSize(9, 22)
-    bar.borderRight:SetTexCoord(0.043137, 0.007843, 0.193548, 0.774193)
-    bar.borderRight:SetPoint("RIGHT", 3, 0)
+    -- Decorative segmented frame, scaled to fit the bar. useAtlasSize=false
+    -- + explicit Size lets us downscale while keeping the baked segments.
+    bar.frame = bar:CreateTexture(nil, "OVERLAY", nil, 7)
+    pcall(bar.frame.SetAtlas, bar.frame, "bonusobjectives-bar-frame-5", false)
+    bar.frame:SetSize(frameW, frameH)
+    bar.frame:SetPoint("LEFT", -math.floor(8 * SCALE), -1)
 
-    bar.borderMid = bar:CreateTexture(nil, "ARTWORK")
-    bar.borderMid:SetTexture(BORDER_TEX)
-    bar.borderMid:SetTexCoord(0.113726, 0.1490196, 0.193548, 0.774193)
-    bar.borderMid:SetPoint("TOPLEFT", bar.borderLeft, "TOPRIGHT")
-    bar.borderMid:SetPoint("BOTTOMRIGHT", bar.borderRight, "BOTTOMLEFT")
+    -- Crystal ring endcap on the right. useAtlasSize=true preserves the
+    -- atlas's native aspect ratio so the ring stays round; we use
+    -- SetScale to size it down to match the scaled bar frame.
+    bar.endcap = bar:CreateTexture(nil, "OVERLAY", nil, 7)
+    pcall(bar.endcap.SetAtlas, bar.endcap, "bonusobjectives-bar-ring", true)
+    bar.endcap:SetScale(SCALE)
+    bar.endcap:SetPoint("RIGHT", bar.frame, "RIGHT", 0, 0)
+
+    -- Reward icon inside the ring. Anchored directly to the bar's
+    -- RIGHT edge (not the scaled endcap, which seems to have wonky
+    -- anchor math when SetScale is applied). The ring sits at the
+    -- bar's right edge anyway, so this lands the icon dead-center.
+    local iconSize = math.floor(28 * SCALE)
+    bar.icon = bar:CreateTexture(nil, "OVERLAY", nil, 6)
+    bar.icon:SetSize(iconSize, iconSize)
+    -- The atlas has internal padding that puts its visible ring further
+    -- LEFT than the anchor's RIGHT edge. Empirical offset to land the
+    -- icon inside the visible ring.
+    bar.icon:SetPoint("CENTER", bar.frame, "RIGHT", -24, 2)
+    bar.iconMask = bar:CreateMaskTexture(nil, "OVERLAY")
+    bar.iconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask",
+                            "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    bar.iconMask:SetAllPoints(bar.icon)
+    bar.icon:AddMaskTexture(bar.iconMask)
+    bar.icon:Hide()
 
     bar.text = bar:CreateFontString(nil, "OVERLAY")
-    bar.text:SetFontObject("GameFontHighlightMedium")
-    bar.text:SetPoint("CENTER")
+    bar.text:SetFontObject("GameFontHighlightSmall")
+    -- Center on the actual fill area, not the whole bar+endcap. The
+    -- ring on the right pulls the visual center off; offset left to
+    -- compensate.
+    bar.text:SetPoint("CENTER", -14, -1)
     bar.text:SetTextColor(1, 1, 1)
     bar:Hide()
     block.progressBar = bar
@@ -209,6 +253,7 @@ function QT.ReleaseBlock(block)
     end
     if block.progressBar then block.progressBar:Hide() end
     if block.itemButton then block.itemButton:Hide() end
+    if block.findGroupBtn then block.findGroupBtn:Hide() end
     if block.widgetContainer then
         block.widgetContainer:RegisterForWidgetSet(nil)
         block._registeredWidgetSetID = nil
@@ -286,16 +331,28 @@ function QT.PopulateBlock(block, quest)
     end
 
     -- POI button
+    local isWorldQuest = (block._kind == "worldquest")
     if block.poi then
         if hideIcon then
             block.poi:Hide()
         elseif block.poi.SetQuestID then
             block.poi:SetQuestID(quest.id)
             if POIButtonUtil and POIButtonUtil.Style then
-                local style = quest.isComplete
-                    and POIButtonUtil.Style.QuestComplete
-                    or POIButtonUtil.Style.QuestInProgress
+                local style
+                if isWorldQuest then
+                    -- WorldQuest style renders Blizzard's gold WQ marker
+                    -- (the "dragon"/diamond icon you see in the default tracker)
+                    style = POIButtonUtil.Style.WorldQuest
+                elseif quest.isComplete then
+                    style = POIButtonUtil.Style.QuestComplete
+                else
+                    style = POIButtonUtil.Style.QuestInProgress
+                end
                 if block.poi.SetStyle then block.poi:SetStyle(style) end
+            end
+            -- WQs should ping the world map when super-tracked
+            if isWorldQuest and block.poi.SetPingWorldMap then
+                block.poi:SetPingWorldMap(true)
             end
             if block.poi.SetSelected and C_SuperTrack and C_SuperTrack.GetSuperTrackedQuestID then
                 block.poi:SetSelected(C_SuperTrack.GetSuperTrackedQuestID() == quest.id)
@@ -304,6 +361,24 @@ function QT.PopulateBlock(block, quest)
                 block.poi:UpdateButtonStyle()
             end
             block.poi:Show()
+        end
+    end
+
+    -- Find Group ("green eye") button — only for WQs that LFG can
+    -- create a group for (returns non-nil activityID).
+    if block.findGroupBtn then
+        local showFindGroup = false
+        if isWorldQuest and quest.id and C_LFGList and C_LFGList.GetActivityIDForQuestID then
+            local ok, activityID = pcall(C_LFGList.GetActivityIDForQuestID, quest.id)
+            if ok and activityID then showFindGroup = true end
+        end
+        if showFindGroup then
+            if block.findGroupBtn.SetUp then
+                block.findGroupBtn:SetUp(quest.id)
+            end
+            block.findGroupBtn:Show()
+        else
+            block.findGroupBtn:Hide()
         end
     end
 
@@ -440,13 +515,9 @@ function QT.PopulateBlock(block, quest)
             line.icon:Hide()
             line.text:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
             line.text:SetWidth(objWidth)
-            -- Strip redundant "(XX%)" from the text when a progress
-            -- bar is showing the percentage visually already
-            local displayText = obj.text or ""
-            if quest.progressBarPct and obj.type == "progressbar" then
-                displayText = displayText:gsub("%s*%(%d+%%%)", "")
-            end
-            line.text:SetText("- " .. displayText)
+            -- Keep the inline "(XX%)" — Blizzard's default tracker
+            -- shows it both in the objective text and on the bar.
+            line.text:SetText("- " .. (obj.text or ""))
         end
 
         if obj.finished then
@@ -478,12 +549,47 @@ function QT.PopulateBlock(block, quest)
     if block.progressBar then
         if quest.progressBarPct and not isScenario then
             local barH = 13
-            local barPad = 4  -- breathing room above and below the bar
+            local barPad = 8  -- breathing room above and below the bar
             block.progressBar:ClearAllPoints()
             block.progressBar:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT",
                 C.OBJ_INDENT, -(objTotalH + C.OBJ_LINE_GAP + barPad))
             block.progressBar:SetValue(quest.progressBarPct)
             block.progressBar.text:SetText(math.floor(quest.progressBarPct) .. "%")
+
+            -- Reward icon inside the ring — same priority chain Blizzard
+            -- uses in BonusObjectiveTrackerProgressBarMixin:UpdateReward
+            local rewardTex
+            if quest.id and HaveQuestRewardData and HaveQuestRewardData(quest.id) then
+                if GetQuestLogRewardInfo then
+                    local _, tex = pcall(function() return select(2, GetQuestLogRewardInfo(1, quest.id)) end)
+                    rewardTex = tex
+                end
+                -- Currency fallback
+                if not rewardTex and C_QuestInfoSystem and C_QuestInfoSystem.GetQuestRewardCurrencies then
+                    local ok, currencies = pcall(C_QuestInfoSystem.GetQuestRewardCurrencies, quest.id)
+                    if ok and currencies and currencies[1] then
+                        rewardTex = currencies[1].texture
+                    end
+                end
+                -- Money fallback
+                if not rewardTex and GetQuestLogRewardMoney and GetQuestLogRewardMoney(quest.id) > 0 then
+                    rewardTex = "Interface\\Icons\\inv_misc_coin_02"
+                end
+                -- XP fallback
+                if not rewardTex and GetQuestLogRewardXP and GetQuestLogRewardXP(quest.id) > 0
+                   and IsPlayerAtEffectiveMaxLevel and not IsPlayerAtEffectiveMaxLevel() then
+                    rewardTex = "Interface\\Icons\\xp_icon"
+                end
+            end
+            if block.progressBar.icon then
+                if rewardTex then
+                    block.progressBar.icon:SetTexture(rewardTex)
+                    block.progressBar.icon:Show()
+                else
+                    block.progressBar.icon:Hide()
+                end
+            end
+
             block.progressBar:Show()
             objTotalH = objTotalH + barH + C.OBJ_LINE_GAP + barPad * 2
         else

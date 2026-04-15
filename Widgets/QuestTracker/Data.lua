@@ -165,6 +165,130 @@ function QT.GetBonusObjectives()
 end
 
 ---------------------------------------------------------------------------
+-- World Quests
+-- Returns a list of all world quests the player should see in the
+-- tracker. Includes both nearby-area WQs (auto-tracked while in zone)
+-- and explicitly watched WQs. Each entry carries objective lines and,
+-- when applicable, a progressBarPct value so the existing bar widget
+-- in PopulateBlock renders the Blizzard-style progress bar.
+---------------------------------------------------------------------------
+
+local function GetWorldQuestTitle(questID)
+    if C_TaskQuest and C_TaskQuest.GetQuestInfoByQuestID then
+        local title = C_TaskQuest.GetQuestInfoByQuestID(questID)
+        if title and title ~= "" then return title end
+    end
+    if QuestUtils_GetQuestName then
+        local title = QuestUtils_GetQuestName(questID)
+        if title and title ~= "" then return title end
+    end
+    return ""
+end
+
+local function BuildWorldQuestEntry(questID)
+    local title = GetWorldQuestTitle(questID)
+    if title == "" then return nil end
+
+    local objectives = {}
+    local progressBarPct = nil
+
+    local rawObjectives = C_QuestLog.GetQuestObjectives and C_QuestLog.GetQuestObjectives(questID) or {}
+    for _, obj in ipairs(rawObjectives) do
+        objectives[#objectives + 1] = {
+            text     = obj.text or "",
+            finished = obj.finished and true or false,
+            type     = obj.type,
+        }
+        if obj.type == "progressbar" and not progressBarPct then
+            local ok, pct = pcall(GetQuestProgressBarPercent, questID)
+            if ok and pct then progressBarPct = pct end
+        end
+    end
+
+    -- Time-left line (only when getting close to expiration)
+    local timeLeftMinutes
+    if C_TaskQuest and C_TaskQuest.GetQuestTimeLeftMinutes then
+        local ok, mins = pcall(C_TaskQuest.GetQuestTimeLeftMinutes, questID)
+        if ok then timeLeftMinutes = mins end
+    end
+    local critical = (_G.WORLD_QUESTS_TIME_CRITICAL_MINUTES) or 60
+    if timeLeftMinutes and timeLeftMinutes > 0 and timeLeftMinutes <= critical then
+        local timeText
+        if timeLeftMinutes < 60 then
+            timeText = string.format("%d min remaining", timeLeftMinutes)
+        else
+            local h = math.floor(timeLeftMinutes / 60)
+            local m = timeLeftMinutes % 60
+            timeText = string.format("%dh %dm remaining", h, m)
+        end
+        objectives[#objectives + 1] = {
+            text     = timeText,
+            finished = false,
+            isTimer  = true,
+        }
+    end
+
+    local isComplete = C_QuestLog.IsComplete and C_QuestLog.IsComplete(questID) or false
+
+    return {
+        kind            = "worldquest",
+        id              = questID,
+        title           = title,
+        objectives      = objectives,
+        isComplete      = isComplete,
+        progressBarPct  = progressBarPct,
+        timeLeftMinutes = timeLeftMinutes,
+    }
+end
+
+local function SortWorldQuests(a, b)
+    -- Mirror Blizzard's WorldQuestObjectiveTracker sort: in-area first,
+    -- then on-map, then by questID.
+    if not GetTaskInfo then return a.id < b.id end
+    local inArea1, onMap1 = GetTaskInfo(a.id)
+    local inArea2, onMap2 = GetTaskInfo(b.id)
+    if inArea1 ~= inArea2 then return inArea1 and true or false end
+    if onMap1  ~= onMap2  then return onMap1  and true or false end
+    return a.id < b.id
+end
+
+function QT.GetWorldQuests()
+    local results = {}
+    local seen = {}
+
+    -- Nearby WQs (auto-tracked when you're in the zone)
+    if GetTasksTable then
+        for _, questID in ipairs(GetTasksTable()) do
+            if QuestUtils_IsQuestWorldQuest and QuestUtils_IsQuestWorldQuest(questID)
+               and not seen[questID] then
+                local entry = BuildWorldQuestEntry(questID)
+                if entry then
+                    results[#results + 1] = entry
+                    seen[questID] = true
+                end
+            end
+        end
+    end
+
+    -- Explicitly watched WQs (super-tracked / pinned from the map)
+    if C_QuestLog and C_QuestLog.GetNumWorldQuestWatches and C_QuestLog.GetQuestIDForWorldQuestWatchIndex then
+        for i = 1, C_QuestLog.GetNumWorldQuestWatches() do
+            local questID = C_QuestLog.GetQuestIDForWorldQuestWatchIndex(i)
+            if questID and not seen[questID] then
+                local entry = BuildWorldQuestEntry(questID)
+                if entry then
+                    results[#results + 1] = entry
+                    seen[questID] = true
+                end
+            end
+        end
+    end
+
+    table.sort(results, SortWorldQuests)
+    return results
+end
+
+---------------------------------------------------------------------------
 -- Achievement tracking
 ---------------------------------------------------------------------------
 

@@ -534,15 +534,39 @@ function QT.Init()
     f:RegisterEvent("WORLD_STATE_TIMER_START")
     f:RegisterEvent("WORLD_STATE_TIMER_STOP")
 
+    -- Coalesce refresh requests. During login the server fires
+    -- QUEST_LOG_UPDATE / CRITERIA_UPDATE / TASK_PROGRESS_UPDATE etc.
+    -- dozens of times within a few seconds while syncing state. Each
+    -- call to QT.Refresh() rebuilds every block and header from
+    -- scratch — running it 100+ times in a single frame trips WoW's
+    -- "script execution time limit" addon-misbehaving error. Instead,
+    -- multiple events in the same frame set a pending flag and we run
+    -- exactly one Refresh at end-of-frame.
+    local refreshPending = false
+    local refreshFlush = CreateFrame("Frame")
+    refreshFlush:Hide()
+    refreshFlush:SetScript("OnUpdate", function(self)
+        self:Hide()
+        refreshPending = false
+        QT.Refresh()
+    end)
+    local function QueueRefresh()
+        if refreshPending then return end
+        refreshPending = true
+        refreshFlush:Show()
+    end
+    -- Expose for any external trigger that wants debounced refresh
+    QT.QueueRefresh = QueueRefresh
+
     f:HookScript("OnEvent", function(_, event)
         if event == "SUPER_TRACKING_CHANGED" then
             QT.OnSuperTrackChanged()
-            QT.Refresh()
+            QueueRefresh()
         elseif event == "CHALLENGE_MODE_COMPLETED" then
             QT.ResetChallengeMode()
-            QT.Refresh()
+            QueueRefresh()
         else
-            QT.Refresh()
+            QueueRefresh()
         end
     end)
 

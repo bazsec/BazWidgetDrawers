@@ -109,22 +109,32 @@ function QT.CreateBlock()
             if C_SuperTrack and C_SuperTrack.SetSuperTrackedQuestID then
                 C_SuperTrack.SetSuperTrackedQuestID(block._questID)
             end
-            -- Open the World Map's quest log side panel and show this
-            -- quest's details — Blizzard's default tracker behaviour.
+            -- Toggle behaviour: clicking a quest that's already open
+            -- in the quest log panel closes the map. Clicking a
+            -- different quest switches to it. Clicking with the map
+            -- closed opens it on the quest log panel showing this
+            -- quest's details.
             --
             -- We deliberately avoid QuestMapFrame_OpenToQuestDetails
-            -- because it goes through ToggleWorldMap → ShowUIPanel,
-            -- which can fail when BazMap disables UIPanelLayout on
-            -- WorldMapFrame (lets the map be freely positioned). Show
-            -- the frame directly and switch modes ourselves so the
-            -- behaviour is identical with or without BazMap.
-            if WorldMapFrame and not WorldMapFrame:IsShown() then
-                WorldMapFrame:Show()
-            end
-            if QuestMapFrame_ShowQuestDetails then
-                QuestMapFrame_ShowQuestDetails(block._questID)
-            elseif QuestMapFrame_OpenToQuestDetails then
-                QuestMapFrame_OpenToQuestDetails(block._questID)
+            -- and HideUIPanel because they route through ShowUIPanel/
+            -- HideUIPanel, which can fail when BazMap disables
+            -- UIPanelLayout on WorldMapFrame (lets the map be freely
+            -- positioned). Direct Show/Hide is BazMap-safe.
+            local mapOpen = WorldMapFrame and WorldMapFrame:IsShown()
+            local details = QuestMapFrame and QuestMapFrame.DetailsFrame
+            local showingThisQuest = mapOpen
+                and details and details:IsShown()
+                and details.questID == block._questID
+
+            if showingThisQuest then
+                WorldMapFrame:Hide()
+            else
+                if not mapOpen then WorldMapFrame:Show() end
+                if QuestMapFrame_ShowQuestDetails then
+                    QuestMapFrame_ShowQuestDetails(block._questID)
+                elseif QuestMapFrame_OpenToQuestDetails then
+                    QuestMapFrame_OpenToQuestDetails(block._questID)
+                end
             end
         elseif button == "RightButton" then
             if C_QuestLog.RemoveQuestWatch then

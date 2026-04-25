@@ -27,7 +27,7 @@ local MIN_HEIGHT   = PAD * 2 + BUTTON_SIZE
 -- Empty slots are hidden; visible buttons fill slots in order. Future
 -- custom-ordering can map button name → slot index via a persisted
 -- table without changing any of the rendering code.
-local MAX_SLOTS    = 12
+local INITIAL_SLOTS = 12  -- pre-built; LayoutButtons grows the pool on demand
 
 -- Queue eye (dungeon/raid/PVP LFG button). Lives in MicroMenuContainer,
 -- not Minimap, so it needs special handling outside the normal scanner.
@@ -174,7 +174,7 @@ function MinimapButtonsWidget:BuildSlots()
     local cols = math.max(1, math.floor((usableWidth + BUTTON_GAP) / (BUTTON_SIZE + BUTTON_GAP)))
     self._cols = cols
 
-    for i = 1, MAX_SLOTS do
+    for i = 1, INITIAL_SLOTS do
         local col = (i - 1) % cols
         local row = math.floor((i - 1) / cols)
         local slot = CreateFrame("Frame", nil, f)
@@ -247,10 +247,12 @@ function MinimapButtonsWidget:LayoutButtons()
 
     -- Collect + sort visible buttons. The custom `buttonOrder` list
     -- drives primary ordering; anything not listed falls back to an
-    -- alphabetical sort at the end.
+    -- alphabetical sort at the end. Filter is AND-based so a button
+    -- the user has hidden via LibDBIcon (which calls :Hide()) doesn't
+    -- count toward the grid height.
     local list = {}
     for btn in pairs(adopted) do
-        if btn:IsVisible() or btn:IsShown() then
+        if btn:IsShown() and btn:IsVisible() and (btn:GetAlpha() or 1) > 0 then
             table.insert(list, btn)
         end
     end
@@ -287,11 +289,22 @@ function MinimapButtonsWidget:LayoutButtons()
     local usableWidth = DESIGN_WIDTH - PAD * 2
     local xOffset = PAD + math.max(0, math.floor((usableWidth - gridWidth) / 2))
 
+    -- Grow the slot pool on demand. With 30+ LibDBIcon-publishing
+    -- addons installed it's easy to overflow a fixed cap; if `list`
+    -- is bigger than the current pool, build more slots. Anything in
+    -- the pool beyond `#list` gets hidden in the loop below.
+    while #self.slots < #list do
+        local slot = CreateFrame("Frame", nil, f)
+        slot:SetSize(BUTTON_SIZE, BUTTON_SIZE)
+        self.slots[#self.slots + 1] = slot
+    end
+    local nSlots = #self.slots
+
     -- Reposition slots to the centered grid and assign buttons. We
     -- DO NOT call btn:Show() — the buttons are already shown (they're
     -- in `list` because we filtered for visibility), and calling Show
     -- would retrigger the hooksecurefunc hooks and recurse.
-    for i = 1, MAX_SLOTS do
+    for i = 1, nSlots do
         local slot = self.slots[i]
         local btn = list[i]
         if btn then

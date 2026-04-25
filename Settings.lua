@@ -395,11 +395,28 @@ local function BuildWidgetGroup(widget, index, total)
 
     local displayName = WidgetDisplayName(id, widget)
 
+    -- Infer the widget's source/category. If the registering addon set
+    -- `widget.source` explicitly that wins; otherwise we look at the
+    -- ID prefix (the convention across the Baz Suite). The Widgets
+    -- list panel groups by this, with a collapsible header per source.
+    local source = widget.source
+    if not source and type(id) == "string" then
+        if id:sub(1, 10) == "bazdrawer_" then
+            source = "BazWidgetDrawers"
+        elseif id:sub(1, 11) == "bazwidgets_" then
+            source = "BazWidgets"
+        elseif id:sub(1, 10) == "bazbroker_" then
+            source = "LibDataBroker"
+        end
+    end
+    source = source or "Other"
+
     return {
         order = index,
         type = "group",
         name = displayName,
         desc = "Configure " .. (widget.label or id),
+        source = source,
         args = args,
     }
 end

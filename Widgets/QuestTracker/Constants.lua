@@ -29,7 +29,10 @@ C.OBJ_RIGHT_PAD      = 10
 C.POI_SIZE           = 20
 C.POI_GAP            = 8
 C.SCENARIO_OBJ_GAP       = 6
-C.SCENARIO_OBJ_LINE_GAP  = 10
+-- Used to be 10, which left a noticeably larger gap below the stage
+-- box than Blizzard's tracker. 4 keeps a bit of breathing room without
+-- the "this objective is floating" feel.
+C.SCENARIO_OBJ_LINE_GAP  = 4
 C.NUB_SIZE           = 14
 C.NUB_TEXT_GAP       = 5
 C.HEADER_HEIGHT      = 32
@@ -81,11 +84,25 @@ function QT.GetObjectiveDone()   return QT.BlizzColor("Complete",        0.60, 0
 
 function QT.FitStringToWidth(fs, maxWidth, minScale)
     if not fs or not maxWidth or maxWidth <= 0 then return end
-    fs:SetTextScale(1.0)
-    local w = fs:GetStringWidth() or 0
-    if w <= 0 or w <= maxWidth then return end
-    local scale = maxWidth / w
-    local floor = minScale or 0.65
-    if scale < floor then scale = floor end
-    fs:SetTextScale(scale)
+
+    local floor = minScale or 0.55
+
+    local function tryFit()
+        fs:SetTextScale(1.0)
+        local w = fs:GetStringWidth() or 0
+        if w <= 0 or w <= maxWidth then return end
+        local scale = maxWidth / w
+        if scale < floor then scale = floor end
+        fs:SetTextScale(scale)
+    end
+
+    tryFit()
+    -- Retry next frame: GetStringWidth occasionally returns 0 the
+    -- frame text was set on a pooled FontString that hasn't been
+    -- laid out yet (we saw long headers truncate on the first paint
+    -- because the initial measurement was zero, so the comparison
+    -- "w <= maxWidth" passed and no scaling was applied).
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, tryFit)
+    end
 end

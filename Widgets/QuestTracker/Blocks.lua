@@ -72,12 +72,18 @@ function QT.CreateBlock()
 
     -- Optional "Stage X" label that sits inside the purple scenario
     -- stage box, above title.text. Hidden for non-scenario blocks.
-    -- Larger font than title.text since it's the headline of the
-    -- stage box, with the stage name acting as the subtitle.
+    -- Mirrors Blizzard's Blizzard_ScenarioObjectiveTracker.xml exactly:
+    --   font  Game18Font, color (1, 0.914, 0.682), 1px shadow
+    -- The stage name below it uses GameFontNormal in a different
+    -- gold (1, 0.831, 0.380), giving the stage box the same visual
+    -- hierarchy as Blizzard's tracker — big stage label up top,
+    -- smaller scenario name beneath.
     title.stageLabel = title:CreateFontString(nil, "OVERLAY")
-    title.stageLabel:SetFontObject(_G.Game18Font_Shadow2 or _G.GameFontNormalLarge or _G.GameFontNormal)
+    title.stageLabel:SetFontObject(_G.Game18Font or _G.GameFontHighlightLarge or _G.GameFontNormal)
     title.stageLabel:SetJustifyH("LEFT")
     title.stageLabel:SetTextColor(1.0, 0.914, 0.682)
+    title.stageLabel:SetShadowColor(0, 0, 0, 1)
+    title.stageLabel:SetShadowOffset(1, -1)
     title.stageLabel:SetWordWrap(false)
     title.stageLabel:Hide()
 
@@ -448,20 +454,31 @@ function QT.PopulateBlock(block, quest)
     if not useWidgetSet then
         block.title.text:SetText(quest.title)
         if isScenario then
-            -- Scenario stage box: two stacked labels.
-            --   stageLabel  → "Stage X" / "Stage X of Y"   (top, larger)
-            --   text        → stage name, e.g. "The Great Calamity"
-            -- Mirrors Blizzard's tracker chrome — see screenshots in
-            -- the v2x6 commit if anyone wonders why this is two lines
-            -- instead of one. The previous behaviour squashed both into
-            -- a single title.text, so users only saw the stage name and
-            -- lost the "Stage X" context.
+            -- Scenario stage box: two stacked labels — mirrors
+            -- Blizzard_ScenarioObjectiveTracker.xml exactly.
+            --   stageLabel  Game18Font, color (1, 0.914, 0.682)
+            --                "Stage X" (final stage uses
+            --                SCENARIO_STAGE_FINAL — "Final Stage")
+            --   text         GameFontNormal, color (1, 0.831, 0.380)
+            --                stage name, e.g. "The Great Calamity"
+            -- Blizzard never inlines "Stage X of Y" — the stage count
+            -- shows up in the hover tooltip headline instead.
             local stageLbl
-            if quest.currentStage and quest.numStages and quest.numStages > 1 then
-                stageLbl = string.format("Stage %d of %d", quest.currentStage, quest.numStages)
+            if quest.currentStage and quest.numStages
+               and quest.numStages > 0
+               and quest.currentStage >= quest.numStages then
+                stageLbl = _G.SCENARIO_STAGE_FINAL or "Final Stage"
             elseif quest.currentStage then
-                stageLbl = string.format("Stage %d", quest.currentStage)
+                local fmt = _G.SCENARIO_STAGE or "Stage %d"
+                stageLbl = string.format(fmt, quest.currentStage)
             end
+
+            -- Match Blizzard's stage-name font + colour. The default
+            -- title font (ObjectiveTrackerHeaderFont) was too big and
+            -- coloured wrong (we previously inherited the gold of
+            -- regular quest titles).
+            block.title.text:SetFontObject(_G.GameFontNormal)
+            block.title.text:SetTextColor(1.0, 0.831, 0.380)
 
             if stageLbl and stageLbl ~= "" then
                 block.title.stageLabel:SetText(stageLbl)
@@ -481,7 +498,6 @@ function QT.PopulateBlock(block, quest)
             end
             block.title.text:SetJustifyH("LEFT")
             block.title.text:SetJustifyV("MIDDLE")
-            block.title.text:SetTextColor(1.0, 0.914, 0.682)
         else
             block.title.stageLabel:Hide()
             block.title.text:ClearAllPoints()
@@ -506,16 +522,30 @@ function QT.PopulateBlock(block, quest)
     -- haranir as they battle against unknown attackers.") only on
     -- hover; we used to render it as an extra objective bullet, which
     -- was visually noisy and didn't match Blizzard's behaviour.
+    --
+    -- The tooltip's anchor flips based on which edge the drawer is
+    -- docked to: drawer on the right → tooltip pops to the LEFT
+    -- (toward screen centre), drawer on the left → tooltip pops to
+    -- the RIGHT. Anchoring the same direction as the drawer would
+    -- push the tooltip off-screen / off the edge of the drawer.
+    -- Anchored to block.stageBg rather than block.title so the
+    -- tooltip clears the entire purple block, not just the inner
+    -- click target.
     if isScenario and not useWidgetSet then
-        local desc = quest.stageDescription
-        block.title:SetScript("OnEnter", function(self)
+        local desc      = quest.stageDescription
+        local stageNum  = quest.currentStage
+        local stageMax  = quest.numStages
+        local stageName = quest.title
+        block.title:SetScript("OnEnter", function()
             if not desc or desc == "" then return end
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            local headline = quest.title or ""
-            if quest.currentStage and quest.numStages and quest.numStages > 1 then
-                headline = string.format("Stage %d of %d: %s", quest.currentStage, quest.numStages, headline)
-            elseif quest.currentStage then
-                headline = string.format("Stage %d: %s", quest.currentStage, headline)
+            local drawerSide = (addon and addon.GetSetting and addon:GetSetting("side")) or "right"
+            local anchor = (drawerSide == "right") and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
+            GameTooltip:SetOwner(block.stageBg, anchor)
+            local headline = stageName or ""
+            if stageNum and stageMax and stageMax > 1 then
+                headline = string.format("Stage %d of %d: %s", stageNum, stageMax, headline)
+            elseif stageNum then
+                headline = string.format("Stage %d: %s", stageNum, headline)
             end
             GameTooltip:SetText(headline, 1.0, 0.82, 0.0)
             GameTooltip:AddLine(desc, 1, 0.82, 0, true)

@@ -82,26 +82,35 @@ function QT.GetObjectiveDone()   return QT.BlizzColor("Complete",        0.60, 0
 --   minScale  optional floor (default 0.65 — below this gets unreadable)
 ---------------------------------------------------------------------------
 
-function QT.FitStringToWidth(fs, maxWidth, minScale)
-    if not fs or not maxWidth or maxWidth <= 0 then return end
+function QT.FitStringToWidth(fs, _maxWidth, minScale)
+    if not fs then return end
 
     local floor = minScale or 0.55
 
+    -- Mirrors Blizzard's AutoScalingFontStringMixin:ScaleTextToFit
+    -- (Blizzard_SharedXML/SecureUtil.lua). The previous implementation
+    -- used GetStringWidth, but on a FontString constrained by LEFT+RIGHT
+    -- anchors GetStringWidth returns the *constrained* width, so the
+    -- "w > maxWidth" branch never fired and the text just truncated.
+    -- IsTruncated reports the visible state directly: true when the
+    -- text is being clipped/elided at the current scale, false when it
+    -- fits — exactly the signal we want to drive a shrink loop.
     local function tryFit()
         fs:SetTextScale(1.0)
-        local w = fs:GetStringWidth() or 0
-        if w <= 0 or w <= maxWidth then return end
-        local scale = maxWidth / w
-        if scale < floor then scale = floor end
-        fs:SetTextScale(scale)
+        if not fs:IsTruncated() then return end
+        local scale = 1.0
+        while fs:IsTruncated() and scale > floor + 0.001 do
+            scale = math.max(scale - 0.05, floor)
+            fs:SetTextScale(scale)
+        end
     end
 
     tryFit()
-    -- Retry next frame: GetStringWidth occasionally returns 0 the
-    -- frame text was set on a pooled FontString that hasn't been
-    -- laid out yet (we saw long headers truncate on the first paint
-    -- because the initial measurement was zero, so the comparison
-    -- "w <= maxWidth" passed and no scaling was applied).
+    -- Retry next frame: pooled FontStrings occasionally report
+    -- IsTruncated() = false on the first call after SetText (the
+    -- text engine hasn't measured the new string yet), then truncate
+    -- on the next frame anyway. Re-running once after a frame settle
+    -- catches that case.
     if C_Timer and C_Timer.After then
         C_Timer.After(0, tryFit)
     end

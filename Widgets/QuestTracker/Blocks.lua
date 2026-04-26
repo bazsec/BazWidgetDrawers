@@ -15,9 +15,16 @@ function QT.CreateBlock()
     local block = CreateFrame("Frame", nil, QT.scrollChild or QT.frame)
     block:SetWidth(C.DESIGN_WIDTH - C.PAD * 2)
 
-    -- Decorative scenario-stage background texture
+    -- Decorative scenario-stage background texture (the purple block).
+    -- For the final stage Blizzard layers a second decorative filigree
+    -- texture on top of the regular stageBg — a glowing gem with
+    -- ornamental flourishes. We mirror that with stageFinalBg, hidden
+    -- by default and shown only when currentStage == numStages.
     block.stageBg = block:CreateTexture(nil, "BORDER")
     block.stageBg:Hide()
+
+    block.stageFinalBg = block:CreateTexture(nil, "BORDER", nil, 1)
+    block.stageFinalBg:Hide()
 
     -- UIWidget container for scenario-specific widgets (Delve tier, deaths, affixes)
     local widgetOk, widgetContainer = pcall(CreateFrame, "Frame", nil, block, "UIWidgetContainerTemplate")
@@ -72,14 +79,14 @@ function QT.CreateBlock()
 
     -- Optional "Stage X" label that sits inside the purple scenario
     -- stage box, above title.text. Hidden for non-scenario blocks.
-    -- Mirrors Blizzard's Blizzard_ScenarioObjectiveTracker.xml exactly:
-    --   font  Game18Font, color (1, 0.914, 0.682), 1px shadow
-    -- The stage name below it uses GameFontNormal in a different
-    -- gold (1, 0.831, 0.380), giving the stage box the same visual
-    -- hierarchy as Blizzard's tracker — big stage label up top,
-    -- smaller scenario name beneath.
+    -- Mirrors Blizzard's Blizzard_ScenarioObjectiveTracker.xml — Stage
+    -- uses the Game18Font family (FRIZQT at 18pt) in cream
+    -- (1, 0.914, 0.682) with a 1px shadow. We call SetFont explicitly
+    -- rather than SetFontObject so we don't rely on Game18Font being
+    -- exposed as a Lua global; FontFamily definitions sometimes are
+    -- and sometimes aren't, depending on the load environment.
     title.stageLabel = title:CreateFontString(nil, "OVERLAY")
-    title.stageLabel:SetFontObject(_G.Game18Font or _G.GameFontHighlightLarge or _G.GameFontNormal)
+    title.stageLabel:SetFont(STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.ttf", 18, "")
     title.stageLabel:SetJustifyH("LEFT")
     title.stageLabel:SetTextColor(1.0, 0.914, 0.682)
     title.stageLabel:SetShadowColor(0, 0, 0, 1)
@@ -336,6 +343,7 @@ function QT.PopulateBlock(block, quest)
     if isScenario then
         if useWidgetSet then
             block.stageBg:Hide()
+            block.stageFinalBg:Hide()
             block.widgetContainer:ClearAllPoints()
             block.widgetContainer:SetPoint("TOPLEFT", block, "TOPLEFT", 0, 0)
             block.widgetContainer:SetPoint("TOPRIGHT", block, "TOPRIGHT", 0, 0)
@@ -352,19 +360,46 @@ function QT.PopulateBlock(block, quest)
                 end
                 block.widgetContainer:Hide()
             end
+            -- Atlas selection mirrors Blizzard's
+            -- ScenarioObjectiveTrackerStageMixin:GetBGAtlases — try
+            -- the textureKit-specific atlas first, fall back to the
+            -- generic evergreen one.
             local textureKit = quest.textureKit or ""
             local atlas = textureKit .. "-trackerheader"
+            local finalAtlas = textureKit .. "-trackerheader-final-filigree"
             if not C_Texture or not C_Texture.GetAtlasInfo
                or not C_Texture.GetAtlasInfo(atlas) then
-                atlas = "evergreen-scenario-trackerheader"
+                atlas      = "evergreen-scenario-trackerheader"
+                finalAtlas = "evergreen-scenario-trackerheader-final-filigree"
             end
             block.stageBg:SetAtlas(atlas, true)
             block.stageBg:ClearAllPoints()
             block.stageBg:SetPoint("TOPLEFT", block, "TOPLEFT", 0, 0)
             block.stageBg:Show()
+
+            -- Final-stage decorative filigree — only when the player
+            -- is on the last stage. Blizzard anchors it at TOPLEFT
+            -- (-10, 3) on top of stageBg, so the gem sticks out a
+            -- touch to the left/up. The texture's :Show is what
+            -- gates visibility; we always keep the atlas set so a
+            -- pooled block doesn't briefly flash a stale texture.
+            local isFinal = quest.currentStage and quest.numStages
+                            and quest.numStages > 0
+                            and quest.currentStage >= quest.numStages
+            if isFinal and finalAtlas
+               and C_Texture and C_Texture.GetAtlasInfo
+               and C_Texture.GetAtlasInfo(finalAtlas) then
+                block.stageFinalBg:SetAtlas(finalAtlas, true)
+                block.stageFinalBg:ClearAllPoints()
+                block.stageFinalBg:SetPoint("TOPLEFT", block.stageBg, "TOPLEFT", -10, 3)
+                block.stageFinalBg:Show()
+            else
+                block.stageFinalBg:Hide()
+            end
         end
     else
         block.stageBg:Hide()
+        block.stageFinalBg:Hide()
         if block.widgetContainer then
             if block._registeredWidgetSetID then
                 block.widgetContainer:RegisterForWidgetSet(nil)
@@ -483,13 +518,22 @@ function QT.PopulateBlock(block, quest)
             if stageLbl and stageLbl ~= "" then
                 block.title.stageLabel:SetText(stageLbl)
                 block.title.stageLabel:ClearAllPoints()
-                block.title.stageLabel:SetPoint("TOPLEFT",  block.title, "TOPLEFT",  0, -2)
-                block.title.stageLabel:SetPoint("TOPRIGHT", block.title, "TOPRIGHT", 0, -2)
+                -- Vertically centre the (stageLabel + gap + text)
+                -- stack inside block.title (which fills the inner
+                -- area of stageBg with a 8 px inset). Anchoring both
+                -- to title's LEFT/RIGHT (vertical mid-line) puts the
+                -- stack symmetrically around the box's vertical
+                -- centre — Blizzard uses fixed pixel offsets from
+                -- TOPLEFT, but their atlas dimensions don't match
+                -- ours exactly, so a centred anchor adapts.
+                local gap = 4
+                block.title.stageLabel:SetPoint("BOTTOMLEFT",  block.title, "LEFT",  0, gap / 2)
+                block.title.stageLabel:SetPoint("BOTTOMRIGHT", block.title, "RIGHT", 0, gap / 2)
                 block.title.stageLabel:Show()
 
                 block.title.text:ClearAllPoints()
-                block.title.text:SetPoint("TOPLEFT",  block.title.stageLabel, "BOTTOMLEFT",  0, -2)
-                block.title.text:SetPoint("TOPRIGHT", block.title.stageLabel, "BOTTOMRIGHT", 0, -2)
+                block.title.text:SetPoint("TOPLEFT",  block.title, "LEFT",  0, -(gap / 2))
+                block.title.text:SetPoint("TOPRIGHT", block.title, "RIGHT", 0, -(gap / 2))
             else
                 block.title.stageLabel:Hide()
                 block.title.text:ClearAllPoints()

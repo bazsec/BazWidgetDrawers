@@ -21,7 +21,12 @@ C.MAX_HEIGHT_DEFAULT = 400
 C.PAD                = 8
 C.BLOCK_SPACING      = 10
 C.HEADER_AFTER_GAP   = 8
-C.GROUP_GAP          = 18
+-- Was 18, which combined with the previous block's BLOCK_SPACING
+-- (10) gave a 28 px gap between e.g. a scenario's last bullet and
+-- the "Quests" header below it — visibly larger than Blizzard's
+-- tracker. 4 brings the total gap down to ~14 px which matches the
+-- default closely.
+C.GROUP_GAP          = 4
 C.TITLE_HEIGHT       = 18
 C.OBJ_INDENT         = 14
 C.OBJ_LINE_GAP       = 2

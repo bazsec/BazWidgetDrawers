@@ -328,6 +328,18 @@ local function BuildWidgetGroup(widget, index, total)
             end,
             disabled = function() return addon:IsWidgetFloating(id) end,
         },
+        dockedToBottom = {
+            order = 4,
+            type = "toggle",
+            name = "Dock to Bottom",
+            desc = "Pin this widget to the drawer's bottom edge. Bottom-docked widgets stack upward from the drawer bottom and grow toward the middle as their content extends, instead of pushing the widgets below them down.",
+            get = function() return addon:IsWidgetDockedToBottom(id) end,
+            set = function(_, val)
+                addon:SetWidgetDockedToBottom(id, val)
+                if addon.WidgetHost then addon.WidgetHost:Reflow() end
+            end,
+            disabled = function() return addon:IsWidgetFloating(id) end,
+        },
 
         fadeHeader = { order = 5, type = "header", name = "Fading" },
         fadeTitleBar = {

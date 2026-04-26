@@ -2,7 +2,7 @@
 ## Title: BazWidgetDrawers
 ## Notes: Slide-out side drawer that hosts docked Baz Suite widgets
 ## Author: Baz4k
-## Version: 035
+## Version: 036
 ## X-License: GPL v2
 ## Category: Baz Suite
 ## X-Category: Interface Enhancements

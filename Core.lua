@@ -20,6 +20,7 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
         widgetFloating = {},          -- [widgetId] = true when detached from the drawer into free Edit Mode
         widgetPositions = {},         -- [widgetId] = { point, relPoint, x, y } for floating widgets
         widgetEnabled = {},           -- [widgetId] = false to disable the widget entirely (default true)
+        widgetDockedToBottom = {},    -- [widgetId] = true to dock at the drawer's bottom edge (stacks upward)
 
         -- Appearance
         backgroundOpacity = 0.9,   -- alpha of the drawer's backdrop fill
@@ -550,6 +551,32 @@ function addon:SetWidgetFloating(id, val)
     local map = self:GetSetting("widgetFloating") or {}
     map[id] = val and true or nil
     self:SetSetting("widgetFloating", map)
+end
+
+---------------------------------------------------------------------------
+-- Dock end (top vs bottom of the drawer)
+--
+-- Each widget normally stacks from the drawer's top edge. Toggling
+-- `dockedToBottom` puts it in a separate "bottom stack" that anchors
+-- to the drawer's bottom edge and grows upward as content extends.
+-- Widgets can declare their own `defaultDockToBottom` at registration
+-- (e.g. a tooltip widget where bottom-anchored is the natural default).
+---------------------------------------------------------------------------
+
+function addon:IsWidgetDockedToBottom(id)
+    local map = self:GetSetting("widgetDockedToBottom")
+    if map and map[id] ~= nil then
+        return map[id] and true or false
+    end
+    -- Fall back to the widget's registration-time default.
+    local widget = BazCore.GetDockableWidget and BazCore:GetDockableWidget(id)
+    return (widget and widget.defaultDockToBottom) and true or false
+end
+
+function addon:SetWidgetDockedToBottom(id, val)
+    local map = self:GetSetting("widgetDockedToBottom") or {}
+    map[id] = val and true or nil
+    self:SetSetting("widgetDockedToBottom", map)
 end
 
 function addon:GetWidgetPosition(id)

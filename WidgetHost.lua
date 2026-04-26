@@ -572,8 +572,15 @@ function WidgetHost:GetSlotPastMidpoint(cursorY)
     if dTop and dBot then draggedMid = (dTop + dBot) * 0.5 end
     if not draggedMid then return nil end
 
+    -- Drag-reorder is scoped to the same stack as the dragged widget:
+    -- you can't drag a top-stack widget into the bottom stack (or vice
+    -- versa) because they grow from opposite ends — a swap would be
+    -- visually nonsense. Switch stacks via the per-widget setting.
+    local draggedToBottom = addon:IsWidgetDockedToBottom(self._dragging)
+
     for id, slot in pairs(self.slots) do
-        if id ~= self._dragging and slot:IsShown() then
+        if id ~= self._dragging and slot:IsShown()
+           and addon:IsWidgetDockedToBottom(id) == draggedToBottom then
             local top, bottom = slot:GetTop(), slot:GetBottom()
             if top and bottom then
                 local mid = (top + bottom) * 0.5
@@ -664,9 +671,24 @@ function WidgetHost:Reflow()
 
     local hostWidth = ComputeHostWidth(self.parent)
     local usableWidth = math.max(hostWidth - WIDGET_SIDE_INSET * 2, 20)
-    local yOffset = 0
 
-    for _, widget in ipairs(widgets) do
+    -- Partition widgets into top and bottom stacks based on each
+    -- widget's dockedToBottom setting. Order within each stack
+    -- preserves the global widget order so the user reading the
+    -- saved order list top-to-bottom matches what they see.
+    local topList, bottomList = {}, {}
+    for _, w in ipairs(widgets) do
+        if addon:IsWidgetDockedToBottom(w.id) then
+            bottomList[#bottomList + 1] = w
+        else
+            topList[#topList + 1] = w
+        end
+    end
+
+    -- Configure one slot. Returns the computed slot height so the
+    -- caller can advance its layout cursor without duplicating the
+    -- widget-render math twice (once for each stack).
+    local function ConfigureSlot(widget)
         local slot = self.slots[widget.id]
         if not slot then
             slot = self:CreateSlot(widget)
@@ -723,14 +745,36 @@ function WidgetHost:Reflow()
 
         local slotHeight = effectiveTitleH
             + (isCollapsed and 0 or (effectiveGap + renderedContentHeight))
+        return slot, slotHeight
+    end
 
+    -- Top stack: anchor each slot's TOP to the drawer top, marching
+    -- downward (yOffset becomes more negative).
+    local yOffset = 0
+    for _, widget in ipairs(topList) do
+        local slot, slotHeight = ConfigureSlot(widget)
         slot:ClearAllPoints()
-        slot:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 0, yOffset)
+        slot:SetPoint("TOPLEFT",  self.parent, "TOPLEFT",  0, yOffset)
         slot:SetPoint("TOPRIGHT", self.parent, "TOPRIGHT", 0, yOffset)
         slot:SetHeight(slotHeight)
         slot:Show()
-
         yOffset = yOffset - slotHeight - SLOT_SPACING
+    end
+
+    -- Bottom stack: walk in reverse so the LAST widget in saved order
+    -- ends up flush with the drawer bottom and the FIRST sits at the
+    -- top of the bottom stack. Each subsequent slot anchors above the
+    -- previous one's height + gap.
+    local bottomY = 0
+    for i = #bottomList, 1, -1 do
+        local widget = bottomList[i]
+        local slot, slotHeight = ConfigureSlot(widget)
+        slot:ClearAllPoints()
+        slot:SetPoint("BOTTOMLEFT",  self.parent, "BOTTOMLEFT",  0, bottomY)
+        slot:SetPoint("BOTTOMRIGHT", self.parent, "BOTTOMRIGHT", 0, bottomY)
+        slot:SetHeight(slotHeight)
+        slot:Show()
+        bottomY = bottomY + slotHeight + SLOT_SPACING
     end
 
     if addon.Drawer and addon.Drawer.SetWidgetCount then

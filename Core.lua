@@ -575,7 +575,12 @@ end
 
 function addon:SetWidgetDockedToBottom(id, val)
     local map = self:GetSetting("widgetDockedToBottom") or {}
-    map[id] = val and true or nil
+    -- Always record an explicit true/false. Storing nil for "off"
+    -- would cause the next IsWidgetDockedToBottom call to fall
+    -- through to the widget's registration default — silently
+    -- ignoring the user's explicit choice for any widget that
+    -- declared defaultDockToBottom = true.
+    map[id] = val and true or false
     self:SetSetting("widgetDockedToBottom", map)
 end
 

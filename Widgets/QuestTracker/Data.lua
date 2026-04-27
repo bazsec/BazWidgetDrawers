@@ -256,15 +256,23 @@ function QT.GetWorldQuests()
     local results = {}
     local seen = {}
 
-    -- Nearby WQs (auto-tracked when you're in the zone)
+    -- Nearby WQs (auto-tracked when you're in the zone). Filter by
+    -- GetTaskInfo's isInArea flag so world quests from a previously
+    -- visited zone don't linger after you leave - matches Blizzard's
+    -- own tracker, which auto-untracks the moment you cross the zone
+    -- boundary. Without this, GetTasksTable can keep returning the
+    -- quest for a while and we'd render a stale entry.
     if GetTasksTable then
         for _, questID in ipairs(GetTasksTable()) do
             if QuestUtils_IsQuestWorldQuest and QuestUtils_IsQuestWorldQuest(questID)
                and not seen[questID] then
-                local entry = BuildWorldQuestEntry(questID)
-                if entry then
-                    results[#results + 1] = entry
-                    seen[questID] = true
+                local isInArea = GetTaskInfo and GetTaskInfo(questID) or false
+                if isInArea then
+                    local entry = BuildWorldQuestEntry(questID)
+                    if entry then
+                        results[#results + 1] = entry
+                        seen[questID] = true
+                    end
                 end
             end
         end
@@ -321,17 +329,36 @@ function QT.GetAchievementData(achievementID)
     local numCriteria = (GetAchievementNumCriteria and GetAchievementNumCriteria(achievementID)) or 0
     for i = 1, numCriteria do
         if GetAchievementCriteriaInfo then
-            local ok, critString, _, critCompleted, quantity, reqQuantity =
+            local ok, critString, _, critCompleted, quantity, reqQuantity, _, _, assetID =
                 pcall(GetAchievementCriteriaInfo, achievementID, i)
-            if ok and critString then
-                local text = critString
-                if reqQuantity and reqQuantity > 1 and quantity then
-                    text = text .. " (" .. quantity .. "/" .. reqQuantity .. ")"
+            if ok then
+                local text = critString or ""
+                -- Meta-achievement criteria where the criterion is a
+                -- sub-achievement (e.g., Loremaster of Midnight) come
+                -- back with an empty critString once the sub-achievement
+                -- is COMPLETED on retail. Fall back to
+                -- GetAchievementInfo(assetID) to recover the sub-
+                -- achievement's name so completed entries still render
+                -- with their proper label - matching Blizzard's own
+                -- tracker, which shows every sub-achievement with a
+                -- green check (completed) or a dash (in progress).
+                if (text == "" or not text)
+                   and assetID and assetID ~= 0
+                   and GetAchievementInfo then
+                    local ok2, _, subName = pcall(GetAchievementInfo, assetID)
+                    if ok2 and subName and subName ~= "" then
+                        text = subName
+                    end
                 end
-                objectives[#objectives + 1] = {
-                    text     = text,
-                    finished = critCompleted and true or false,
-                }
+                if text and text ~= "" then
+                    if reqQuantity and reqQuantity > 1 and quantity then
+                        text = text .. " (" .. quantity .. "/" .. reqQuantity .. ")"
+                    end
+                    objectives[#objectives + 1] = {
+                        text     = text,
+                        finished = critCompleted and true or false,
+                    }
+                end
             end
         end
     end

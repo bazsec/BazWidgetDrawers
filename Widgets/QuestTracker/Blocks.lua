@@ -444,14 +444,15 @@ function QT.PopulateBlock(block, quest)
     end
 
     -- Find Group ("green eye") button - same condition Blizzard's own
-    -- BonusObjectiveTracker uses: QuestUtil.CanCreateQuestGroup(questID).
-    -- This is a stricter check than just GetActivityIDForQuestID - it
-    -- also factors in whether the quest is actually meant for grouping
-    -- (elite WQs, group quests, etc.) rather than every WQ that
-    -- happens to have an LFG activity definition.
+    -- tracker uses: QuestUtil.CanCreateQuestGroup(questID). That's
+    -- the standard check for both world quests and regular quests with
+    -- an LFG activity defined (elite group quests, world bosses, etc.).
+    -- Restricting to isWorldQuest only would miss the regular quests
+    -- that legitimately should show the eye, so we just delegate to
+    -- the helper for every quest block.
     if block.findGroupBtn then
         local showFindGroup = false
-        if isWorldQuest and quest.id and QuestUtil and QuestUtil.CanCreateQuestGroup then
+        if quest.id and QuestUtil and QuestUtil.CanCreateQuestGroup then
             local ok, can = pcall(QuestUtil.CanCreateQuestGroup, quest.id)
             if ok and can then showFindGroup = true end
         end

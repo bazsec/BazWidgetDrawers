@@ -28,7 +28,7 @@ local function AttachMicroMenu()
     if not MicroMenu then return end
 
     -- Reparent MicroMenu (the actual button row) instead of
-    -- MicroMenuContainer — the container is oversized because it
+    -- MicroMenuContainer - the container is oversized because it
     -- reserves space for QueueStatusButton (the eye) which we
     -- already captured into the MinimapButtons widget.
     wrapper._origParent = MicroMenu:GetParent()
@@ -76,7 +76,7 @@ local function AttachMicroMenu()
         MicroMenuContainer:ClearAllPoints()
         MicroMenuContainer:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
 
-        -- Kill the Edit Mode selection highlight — it sits at frame
+        -- Kill the Edit Mode selection highlight - it sits at frame
         -- level 1000 with its own anchors that don't follow the
         -- parent's off-screen position, leaving a visible blue
         -- crosshair on screen.

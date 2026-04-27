@@ -8,7 +8,7 @@ local QT = addon.QT
 local C  = QT.C
 
 ---------------------------------------------------------------------------
--- Block creation — builds one reusable block frame with all subcomponents
+-- Block creation - builds one reusable block frame with all subcomponents
 ---------------------------------------------------------------------------
 
 function QT.CreateBlock()
@@ -17,7 +17,7 @@ function QT.CreateBlock()
 
     -- Decorative scenario-stage background texture (the purple block).
     -- For the final stage Blizzard layers a second decorative filigree
-    -- texture on top of the regular stageBg — a glowing gem with
+    -- texture on top of the regular stageBg - a glowing gem with
     -- ornamental flourishes. We mirror that with stageFinalBg, hidden
     -- by default and shown only when currentStage == numStages.
     block.stageBg = block:CreateTexture(nil, "BORDER")
@@ -63,7 +63,7 @@ function QT.CreateBlock()
 
     -- Title text. We disable wrap here and rely on FitStringToWidth
     -- (called per-render in PopulateBlock) to scale long titles down
-    -- so they fit one line — wrapping looked cramped at the drawer's
+    -- so they fit one line - wrapping looked cramped at the drawer's
     -- 260 px column width.
     title.text = title:CreateFontString(nil, "OVERLAY")
     if _G[C.TITLE_FONT] then
@@ -79,7 +79,7 @@ function QT.CreateBlock()
 
     -- Optional "Stage X" label that sits inside the purple scenario
     -- stage box, above title.text. Hidden for non-scenario blocks.
-    -- Mirrors Blizzard's Blizzard_ScenarioObjectiveTracker.xml — Stage
+    -- Mirrors Blizzard's Blizzard_ScenarioObjectiveTracker.xml - Stage
     -- uses the Game18Font family (FRIZQT at 18pt) in cream
     -- (1, 0.914, 0.682) with a 1px shadow. We call SetFont explicitly
     -- rather than SetFontObject so we don't rely on Game18Font being
@@ -186,8 +186,8 @@ function QT.CreateBlock()
         block.itemButton = itemBtn
     end
 
-    -- Find Group ("green eye") button — same Blizzard template the
-    -- BonusObjectiveTracker uses. Mixin handles the OnClick → opens
+    -- Find Group ("green eye") button - same Blizzard template the
+    -- BonusObjectiveTracker uses. Mixin handles the OnClick > opens
     -- the Premade Group Finder filtered for that WQ.
     local fgOk, findGroupBtn = pcall(CreateFrame, "Button", nil, block, "QuestObjectiveFindGroupButtonTemplate")
     if fgOk and findGroupBtn then
@@ -197,12 +197,12 @@ function QT.CreateBlock()
         -- the eye, intercepting clicks. Bump our frame level above it
         -- so we get hover/click on the entire eye, not just the bottom.
         findGroupBtn:SetFrameLevel((block:GetFrameLevel() or 0) + 10)
-        -- Use the template's default UI-Common-MouseHilight for hover —
+        -- Use the template's default UI-Common-MouseHilight for hover -
         -- matches Blizzard's native look.
         block.findGroupBtn = findGroupBtn
     end
 
-    -- Progress bar — matches Blizzard's bonus-objective bar.
+    -- Progress bar - matches Blizzard's bonus-objective bar.
     -- Atlases (bonusobjectives-bar-frame-5 + bonusobjectives-bar-ring)
     -- have segment positions baked in. We scale them down ~80% to fit
     -- our narrower widget while keeping the segments crisp.
@@ -324,7 +324,7 @@ function QT.ReleaseBlock(block)
 end
 
 ---------------------------------------------------------------------------
--- PopulateBlock — render quest/scenario/achievement data into a block
+-- PopulateBlock - render quest/scenario/achievement data into a block
 ---------------------------------------------------------------------------
 
 function QT.PopulateBlock(block, quest)
@@ -361,7 +361,7 @@ function QT.PopulateBlock(block, quest)
                 block.widgetContainer:Hide()
             end
             -- Atlas selection mirrors Blizzard's
-            -- ScenarioObjectiveTrackerStageMixin:GetBGAtlases — try
+            -- ScenarioObjectiveTrackerStageMixin:GetBGAtlases - try
             -- the textureKit-specific atlas first, fall back to the
             -- generic evergreen one.
             local textureKit = quest.textureKit or ""
@@ -377,7 +377,7 @@ function QT.PopulateBlock(block, quest)
             block.stageBg:SetPoint("TOPLEFT", block, "TOPLEFT", 0, 0)
             block.stageBg:Show()
 
-            -- Final-stage decorative filigree — only when the player
+            -- Final-stage decorative filigree - only when the player
             -- is on the last stage. Blizzard anchors it at TOPLEFT
             -- (-10, 3) on top of stageBg, so the gem sticks out a
             -- touch to the left/up. The texture's :Show is what
@@ -443,9 +443,9 @@ function QT.PopulateBlock(block, quest)
         end
     end
 
-    -- Find Group ("green eye") button — same condition Blizzard's own
+    -- Find Group ("green eye") button - same condition Blizzard's own
     -- BonusObjectiveTracker uses: QuestUtil.CanCreateQuestGroup(questID).
-    -- This is a stricter check than just GetActivityIDForQuestID — it
+    -- This is a stricter check than just GetActivityIDForQuestID - it
     -- also factors in whether the quest is actually meant for grouping
     -- (elite WQs, group quests, etc.) rather than every WQ that
     -- happens to have an LFG activity definition.
@@ -489,14 +489,14 @@ function QT.PopulateBlock(block, quest)
     if not useWidgetSet then
         block.title.text:SetText(quest.title)
         if isScenario then
-            -- Scenario stage box: two stacked labels — mirrors
+            -- Scenario stage box: two stacked labels - mirrors
             -- Blizzard_ScenarioObjectiveTracker.xml exactly.
             --   stageLabel  Game18Font, color (1, 0.914, 0.682)
             --                "Stage X" (final stage uses
-            --                SCENARIO_STAGE_FINAL — "Final Stage")
+            --                SCENARIO_STAGE_FINAL - "Final Stage")
             --   text         GameFontNormal, color (1, 0.831, 0.380)
             --                stage name, e.g. "The Great Calamity"
-            -- Blizzard never inlines "Stage X of Y" — the stage count
+            -- Blizzard never inlines "Stage X of Y" - the stage count
             -- shows up in the hover tooltip headline instead.
             local stageLbl
             if quest.currentStage and quest.numStages
@@ -523,7 +523,7 @@ function QT.PopulateBlock(block, quest)
                 -- area of stageBg with a 8 px inset). Anchoring both
                 -- to title's LEFT/RIGHT (vertical mid-line) puts the
                 -- stack symmetrically around the box's vertical
-                -- centre — Blizzard uses fixed pixel offsets from
+                -- centre - Blizzard uses fixed pixel offsets from
                 -- TOPLEFT, but their atlas dimensions don't match
                 -- ours exactly, so a centred anchor adapts.
                 local gap = 4
@@ -568,8 +568,8 @@ function QT.PopulateBlock(block, quest)
     -- was visually noisy and didn't match Blizzard's behaviour.
     --
     -- The tooltip's anchor flips based on which edge the drawer is
-    -- docked to: drawer on the right → tooltip pops to the LEFT
-    -- (toward screen centre), drawer on the left → tooltip pops to
+    -- docked to: drawer on the right > tooltip pops to the LEFT
+    -- (toward screen centre), drawer on the left > tooltip pops to
     -- the RIGHT. Anchoring the same direction as the drawer would
     -- push the tooltip off-screen / off the edge of the drawer.
     -- Anchored to block.stageBg rather than block.title so the
@@ -704,7 +704,7 @@ function QT.PopulateBlock(block, quest)
             line.icon:Hide()
             line.text:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
             line.text:SetWidth(objWidth)
-            -- Keep the inline "(XX%)" — Blizzard's default tracker
+            -- Keep the inline "(XX%)" - Blizzard's default tracker
             -- shows it both in the objective text and on the bar.
             line.text:SetText("- " .. (obj.text or ""))
         end
@@ -733,7 +733,7 @@ function QT.PopulateBlock(block, quest)
         end
     end
 
-    -- Progress bar — extra padding above and below so the bar doesn't
+    -- Progress bar - extra padding above and below so the bar doesn't
     -- crowd the objective text or the next element.
     if block.progressBar then
         if quest.progressBarPct and not isScenario then
@@ -745,7 +745,7 @@ function QT.PopulateBlock(block, quest)
             block.progressBar:SetValue(quest.progressBarPct)
             block.progressBar.text:SetText(math.floor(quest.progressBarPct) .. "%")
 
-            -- Reward icon inside the ring — same priority chain Blizzard
+            -- Reward icon inside the ring - same priority chain Blizzard
             -- uses in BonusObjectiveTrackerProgressBarMixin:UpdateReward
             local rewardTex
             if quest.id and HaveQuestRewardData and HaveQuestRewardData(quest.id) then

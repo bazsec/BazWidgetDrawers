@@ -78,7 +78,7 @@ end
 --
 -- Uses ZGV.Pointer:SetWaypoint(mapID, x, y, data, showArrow) to set
 -- Zygor's navigation arrow to the super-tracked quest's next objective.
--- Same trigger as TomTom — fires on SUPER_TRACKING_CHANGED.
+-- Same trigger as TomTom - fires on SUPER_TRACKING_CHANGED.
 ---------------------------------------------------------------------------
 
 function QT.HasZygor()

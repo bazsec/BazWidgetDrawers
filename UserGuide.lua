@@ -19,10 +19,10 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
                     "Zone Text",
                     "Micro Menu",
                     "Info Bar (server time, latency, FPS, gold)",
-                    "Anything from BazWidgets (gold, coords, currencies, stats, …)",
+                    "Anything from BazWidgets (gold, coords, currencies, stats, ...)",
                     "Any addon's widgets registered through LibBazWidget-1.0",
                 }},
-                { type = "note", style = "tip", text = "Widget content stays at full opacity even when the drawer chrome is faded — quest text and minimap remain readable at all times." },
+                { type = "note", style = "tip", text = "Widget content stays at full opacity even when the drawer chrome is faded - quest text and minimap remain readable at all times." },
             },
         },
         {
@@ -33,9 +33,9 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
                 { type = "paragraph", text = "A metal pull-tab handle (Blizzard atlas art) sits on the screen edge. Click to slide the drawer on or off screen." },
                 { type = "h3", text = "Side & width" },
                 { type = "list", items = {
-                    "|cffffd700Side|r — Left or Right; tab, slide direction, and edge hot zone all flip automatically",
-                    "|cffffd700Width|r — 120–400 px; every docked widget rescales uniformly when you change this",
-                    "|cffffd700Edge hot zone|r — invisible strip along the screen edge re-reveals the tab when collapsed",
+                    "|cffffd700Side|r - Left or Right; tab, slide direction, and edge hot zone all flip automatically",
+                    "|cffffd700Width|r - 120-400 px; every docked widget rescales uniformly when you change this",
+                    "|cffffd700Edge hot zone|r - invisible strip along the screen edge re-reveals the tab when collapsed",
                 }},
             },
         },
@@ -55,7 +55,7 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
                       { "Crafting",  "Currency Bar, Note Pad, Calculator" },
                   },
                 },
-                { type = "note", style = "info", text = "Switch between presets with a single click — no need to drag widgets in and out." },
+                { type = "note", style = "info", text = "Switch between presets with a single click - no need to drag widgets in and out." },
             },
         },
         {
@@ -65,9 +65,9 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
                 { type = "table",
                   columns = { "Setting", "Range", "Default" },
                   rows = {
-                      { "Fade Delay",     "0–5 s",       "1 s" },
-                      { "Fade Duration",  "0.05–2 s",    "0.4 s" },
-                      { "Faded Opacity",  "0–1",         "0 (invisible)" },
+                      { "Fade Delay",     "0-5 s",       "1 s" },
+                      { "Fade Duration",  "0.05-2 s",    "0.4 s" },
+                      { "Faded Opacity",  "0-1",         "0 (invisible)" },
                       { "Combat Lock",    "on / off",    "off" },
                   },
                 },
@@ -86,7 +86,7 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
                     "Fade settings are greyed out in the options panel",
                 }},
                 { type = "h3", text = "Unlocking" },
-                { type = "paragraph", text = "Hover anywhere on the drawer — the lock icon reappears. Click it to unlock and restore chrome." },
+                { type = "paragraph", text = "Hover anywhere on the drawer - the lock icon reappears. Click it to unlock and restore chrome." },
                 { type = "note", style = "tip", text = "Lock mode is ideal for screenshots or minimalist UIs." },
             },
         },
@@ -95,25 +95,25 @@ BazCore:RegisterUserGuide("BazWidgetDrawers", {
             blocks = {
                 { type = "paragraph", text = "Each widget docks with its own title bar, collapse chevron, label, and live status text (quest count, durability %, server time, etc.)." },
                 { type = "collapsible", title = "Reordering", style = "h3", collapsed = false, blocks = {
-                    { type = "paragraph", text = "Hold a widget's title bar for half a second — it turns green — then drag up or down to swap positions." },
+                    { type = "paragraph", text = "Hold a widget's title bar for half a second - it turns green - then drag up or down to swap positions." },
                     { type = "note", style = "info", text = "You can also use the Move Up / Move Down buttons in the widget's settings page." },
                 }},
                 { type = "collapsible", title = "Collapse", style = "h3", blocks = {
                     { type = "paragraph", text = "Click the chevron on a widget's title bar to collapse it down to just the title row. Click again to expand." },
                 }},
                 { type = "collapsible", title = "Floating mode", style = "h3", blocks = {
-                    { type = "paragraph", text = "Detach any widget and position it anywhere via Blizzard's Edit Mode. The widget keeps its own slot in the drawer or hides — your choice." },
+                    { type = "paragraph", text = "Detach any widget and position it anywhere via Blizzard's Edit Mode. The widget keeps its own slot in the drawer or hides - your choice." },
                 }},
                 { type = "collapsible", title = "Per-widget settings", style = "h3", blocks = {
-                    { type = "paragraph", text = "Each widget exposes its own settings via |cffffd700GetOptionsArgs|r — fade overrides, content options, etc. Settings appear under |cffffd700Widgets > [Widget Name]|r." },
+                    { type = "paragraph", text = "Each widget exposes its own settings via |cffffd700GetOptionsArgs|r - fade overrides, content options, etc. Settings appear under |cffffd700Widgets > [Widget Name]|r." },
                 }},
             },
         },
         {
             title = "Dormant Widgets",
             blocks = {
-                { type = "lead", text = "Some widgets are dormant — they only appear in the drawer when a condition is met." },
-                { type = "paragraph", text = "Example: the Dungeon Finder widget (from BazWidgets) only registers when you're queued. When you leave the queue, it unregisters entirely — no slot, no title bar, no wasted space." },
+                { type = "lead", text = "Some widgets are dormant - they only appear in the drawer when a condition is met." },
+                { type = "paragraph", text = "Example: the Dungeon Finder widget (from BazWidgets) only registers when you're queued. When you leave the queue, it unregisters entirely - no slot, no title bar, no wasted space." },
                 { type = "note", style = "info", text = "Dormant widgets still appear in the Widgets sub-category marked with |cffffd700[D]|r so you can configure them while they're not visible." },
             },
         },

@@ -1,5 +1,5 @@
 -- QuestTracker: Options & Blizzard Tracker Visibility
--- Per-widget settings exposed in BazWidgetDrawers → Widgets → Quest Tracker.
+-- Per-widget settings exposed in BazWidgetDrawers > Widgets > Quest Tracker.
 
 local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
@@ -25,7 +25,7 @@ function QT.ApplyBlizzardTrackerVisibility()
     end
 
     -- Hook Show once (hooksecurefunc preserves the original secure
-    -- method so it doesn't taint the frame's method table — unlike
+    -- method so it doesn't taint the frame's method table - unlike
     -- the old approach of replacing Show with Hide which tainted
     -- everything downstream including UnitFrame health bars).
     if not blizzTrackerHooked then

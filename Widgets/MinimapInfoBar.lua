@@ -45,7 +45,7 @@ local function AttachFrames()
         trackingBtn:Show()
     end
 
-    -- Calendar proxy button. We do NOT reparent GameTimeFrame — it's a
+    -- Calendar proxy button. We do NOT reparent GameTimeFrame - it's a
     -- secure/protected button and reparenting it taints Blizzard code
     -- paths (notably Edit Mode and any scroll list that inspects frame
     -- attributes downstream). Instead we build a plain Button that
@@ -53,7 +53,7 @@ local function AttachFrames()
     -- + red glow when invites are pending.
     local calendarBtn = CreateFrame("Button", nil, wrapper)
     calendarBtn:SetSize(iconSize, iconSize)
-    -- Tight gap between calendar and tracking — they're visually paired
+    -- Tight gap between calendar and tracking - they're visually paired
     -- via the shared `ui-hud-minimap-button` background, so they read
     -- better snug together rather than with the full PAD between them.
     local CAL_TRACK_GAP = 1
@@ -63,19 +63,19 @@ local function AttachFrames()
         calendarBtn:SetPoint("RIGHT", wrapper, "RIGHT", -PAD, 0)
     end
 
-    -- Background frame — same rounded bevel atlas used behind the
+    -- Background frame - same rounded bevel atlas used behind the
     -- minimap tracking button, so both icons share the same chrome.
     calendarBtn.bg = calendarBtn:CreateTexture(nil, "BACKGROUND")
     calendarBtn.bg:SetAllPoints()
     calendarBtn.bg:SetAtlas("ui-hud-minimap-button", false)
 
-    -- Day-of-month label centered on the button. Color #A29580 — warm
+    -- Day-of-month label centered on the button. Color #A29580 - warm
     -- desaturated tan that matches the minimap-button bevel chrome.
     calendarBtn.text = calendarBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     calendarBtn.text:SetPoint("CENTER", 0, 0)
     calendarBtn.text:SetTextColor(0xA2 / 255, 0x95 / 255, 0x80 / 255)
 
-    -- Pending-invite overlay — only shown when C_Calendar reports invites
+    -- Pending-invite overlay - only shown when C_Calendar reports invites
     calendarBtn.pending = calendarBtn:CreateTexture(nil, "OVERLAY")
     calendarBtn.pending:SetAllPoints()
     calendarBtn.pending:SetAtlas("Calendar-PendingInvite", false)
@@ -100,7 +100,7 @@ local function AttachFrames()
         if ToggleCalendar then ToggleCalendar() end
     end)
     calendarBtn:SetScript("OnEnter", function(self)
-        -- Hover color #BA9B51 — a slightly brighter warm gold than the
+        -- Hover color #BA9B51 - a slightly brighter warm gold than the
         -- at-rest #A29580 tan so the button reads as interactive.
         if self.text then
             self.text:SetTextColor(0xBA / 255, 0x9B / 255, 0x51 / 255)
@@ -205,13 +205,13 @@ local function AttachFrames()
     mailBtn.bg:SetAllPoints()
     mailBtn.bg:SetAtlas("ui-hud-minimap-button", false)
 
-    -- Native mail icon — tracking atlas gives us a clean mailbox glyph
+    -- Native mail icon - tracking atlas gives us a clean mailbox glyph
     mailBtn.icon = mailBtn:CreateTexture(nil, "ARTWORK")
     mailBtn.icon:SetPoint("CENTER", 0, 0)
     mailBtn.icon:SetSize(math.floor(iconSize * 0.70), math.floor(iconSize * 0.70))
     mailBtn.icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
 
-    -- Subtle pulse when new mail comes in — AnimationGroup looping a
+    -- Subtle pulse when new mail comes in - AnimationGroup looping a
     -- short alpha in/out on a tint texture overlay.
     mailBtn.pulse = mailBtn:CreateTexture(nil, "OVERLAY")
     mailBtn.pulse:SetAllPoints()
@@ -228,7 +228,7 @@ local function AttachFrames()
     pulseIn:SetSmoothing("IN_OUT")
 
     mailBtn:SetScript("OnClick", function()
-        -- Best-effort — no-op if not near a mailbox
+        -- Best-effort - no-op if not near a mailbox
         if ToggleMailFrame then ToggleMailFrame() end
     end)
     mailBtn:SetScript("OnEnter", function(self)

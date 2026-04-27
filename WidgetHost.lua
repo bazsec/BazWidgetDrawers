@@ -14,19 +14,19 @@
 --   Each widget declares a native designWidth it was built for. The host
 --   computes a uniform scale factor (usableWidth / designWidth) and
 --   applies it to the widget frame via SetScale. The title bar is NOT
---   scaled — it owns the full slot width so it stays legible regardless
+--   scaled - it owns the full slot width so it stays legible regardless
 --   of drawer width.
 --
 -- Widget contract:
 --   widget.id                 unique string
 --   widget.label              display label
 --   widget.designWidth        native width in pixels (default 200)
---   widget.designHeight       native height in pixels (default 60) — initial hint
+--   widget.designHeight       native height in pixels (default 60) - initial hint
 --   widget.frame              the actual Frame to parent into a slot's content area
---   widget:GetDesiredHeight() optional — overrides designHeight each reflow
---   widget:GetStatusText()    optional — returns (text, r, g, b) for the title bar
---   widget:OnDock(host)       optional — called when parented
---   widget:OnUndock()         optional — called when removed
+--   widget:GetDesiredHeight() optional - overrides designHeight each reflow
+--   widget:GetStatusText()    optional - returns (text, r, g, b) for the title bar
+--   widget:OnDock(host)       optional - called when parented
+--   widget:OnUndock()         optional - called when removed
 
 local addon = BazCore:GetAddon("BazWidgetDrawers")
 
@@ -97,7 +97,7 @@ function WidgetHost:CreateSlot(widget)
     title.bg:SetAllPoints()
     title.bg:SetColorTexture(0.08, 0.08, 0.12, 0.7)
 
-    -- Slot content background — owned by the slot, drawn beneath the
+    -- Slot content background - owned by the slot, drawn beneath the
     -- widget's content area. Widgets no longer draw their own background.
     slot.contentBg = slot:CreateTexture(nil, "BACKGROUND")
     slot.contentBg:SetColorTexture(0.05, 0.05, 0.08, 0.6)
@@ -127,7 +127,7 @@ function WidgetHost:CreateSlot(widget)
         if button ~= "LeftButton" then return end
         if addon:GetSetting("locked") then return end
 
-        -- Start a hold timer — if held long enough, activate drag mode
+        -- Start a hold timer - if held long enough, activate drag mode
         self._holdPending = true
         self._holdTimer = C_Timer.NewTimer(DRAG_HOLD_TIME, function()
             if not self._holdPending then return end
@@ -148,12 +148,12 @@ function WidgetHost:CreateSlot(widget)
         end
 
         if self._dragReady then
-            -- Was dragging — stop and restore color
+            -- Was dragging - stop and restore color
             self._dragReady = nil
             self.bg:SetColorTexture(0.15, 0.15, 0.22, 0.9)  -- hovered color (mouse is still over)
             WidgetHost:StopDrag()
         elseif self._holdPending then
-            -- Short click — toggle collapse
+            -- Short click - toggle collapse
             self._holdPending = nil
             local collapsed = addon:IsWidgetCollapsed(widget.id)
             addon:SetWidgetCollapsed(widget.id, not collapsed)
@@ -212,9 +212,9 @@ end
 -- Float / Dock transitions
 --
 -- A widget can live in one of two states:
---   1. Docked   — parented into a slot inside the drawer's widget host
+--   1. Docked   - parented into a slot inside the drawer's widget host
 --                 (sized/scaled by Reflow, title bar + collapse, etc.)
---   2. Floating — parented to UIParent with its own saved anchor and
+--   2. Floating - parented to UIParent with its own saved anchor and
 --                 registered with BazCore Edit Mode for drag.
 --
 -- Transitions are reversible at any time.
@@ -222,8 +222,8 @@ end
 
 -- Translate a widget's Ace-style GetOptionsArgs() into BazCore Edit Mode
 -- `settings` + `actions` so clicking the floating widget in Edit Mode
--- opens a popup with its configuration. Toggle → checkbox, range → slider,
--- execute → action button. Other types are skipped.
+-- opens a popup with its configuration. Toggle > checkbox, range > slider,
+-- execute > action button. Other types are skipped.
 local function BuildEditModeConfig(widget)
     local settings, actions = {}, {}
     if not widget.GetOptionsArgs then return settings, actions end
@@ -521,7 +521,7 @@ end
 function WidgetHost:DragUpdate()
     if not self._dragging or not self.parent then return end
 
-    -- Detect mouse release globally — OnMouseUp on the originating
+    -- Detect mouse release globally - OnMouseUp on the originating
     -- title bar won't fire if the cursor moved to a different frame.
     if not IsMouseButtonDown("LeftButton") then
         -- Find the originating title bar and restore its color
@@ -548,7 +548,7 @@ function WidgetHost:DragUpdate()
 
     -- Find the slot whose CENTER the cursor has crossed past (not just
     -- "any slot the cursor is inside"). This gives a natural hysteresis
-    -- — a small mouse jitter at a slot boundary can't flip the swap
+    -- - a small mouse jitter at a slot boundary can't flip the swap
     -- back-and-forth because the cursor has to physically move past
     -- the target's midline.
     local targetId = self:GetSlotPastMidpoint(cursorY)
@@ -574,7 +574,7 @@ function WidgetHost:GetSlotPastMidpoint(cursorY)
 
     -- Drag-reorder is scoped to the same stack as the dragged widget:
     -- you can't drag a top-stack widget into the bottom stack (or vice
-    -- versa) because they grow from opposite ends — a swap would be
+    -- versa) because they grow from opposite ends - a swap would be
     -- visually nonsense. Switch stacks via the per-widget setting.
     local draggedToBottom = addon:IsWidgetDockedToBottom(self._dragging)
 
@@ -584,12 +584,12 @@ function WidgetHost:GetSlotPastMidpoint(cursorY)
             local top, bottom = slot:GetTop(), slot:GetBottom()
             if top and bottom then
                 local mid = (top + bottom) * 0.5
-                -- Dragging DOWN into a lower slot — cursor must be
+                -- Dragging DOWN into a lower slot - cursor must be
                 -- below that slot's midpoint
                 if mid < draggedMid and cursorY <= mid then
                     return id
                 end
-                -- Dragging UP into a higher slot — cursor must be
+                -- Dragging UP into a higher slot - cursor must be
                 -- above that slot's midpoint
                 if mid > draggedMid and cursorY >= mid then
                     return id
@@ -624,7 +624,7 @@ function WidgetHost:SwapWidgetOrder(idA, idB)
 end
 
 ---------------------------------------------------------------------------
--- Reflow — rebuild the vertical slot stack from the current registry
+-- Reflow - rebuild the vertical slot stack from the current registry
 ---------------------------------------------------------------------------
 
 function WidgetHost:Reflow()

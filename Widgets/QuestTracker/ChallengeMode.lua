@@ -6,13 +6,13 @@
 --
 -- APIs used:
 --   C_ChallengeMode.IsChallengeModeActive()
---   C_ChallengeMode.GetActiveKeystoneInfo() → level, affixIDs, wasEnergized
+--   C_ChallengeMode.GetActiveKeystoneInfo() > level, affixIDs, wasEnergized
 --   C_ChallengeMode.GetActiveChallengeMapID()
---   C_ChallengeMode.GetMapUIInfo(mapID) → name, _, timeLimit
---   C_ChallengeMode.GetDeathCount() → count, timeLost
---   C_ChallengeMode.GetAffixInfo(affixID) → name, desc, textureID
---   GetWorldElapsedTimerInfo(timerID) → returns elapsed, type
---   GetWorldElapsedTime(timerID) → elapsed seconds
+--   C_ChallengeMode.GetMapUIInfo(mapID) > name, _, timeLimit
+--   C_ChallengeMode.GetDeathCount() > count, timeLost
+--   C_ChallengeMode.GetAffixInfo(affixID) > name, desc, textureID
+--   GetWorldElapsedTimerInfo(timerID) > returns elapsed, type
+--   GetWorldElapsedTime(timerID) > elapsed seconds
 
 local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end

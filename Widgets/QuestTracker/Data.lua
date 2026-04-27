@@ -1,6 +1,6 @@
 -- QuestTracker: Data Retrieval
 -- Quest, achievement, and classification data polling. Pure read-only
--- API calls — no frame creation or visual work.
+-- API calls - no frame creation or visual work.
 
 local addon = BazCore:GetAddon("BazWidgetDrawers")
 if not addon then return end
@@ -139,7 +139,7 @@ function QT.GetBonusObjectives()
 
     local tasks = GetTasksTable()
     for _, questID in ipairs(tasks) do
-        -- Skip world quests and already-tracked quests — those show
+        -- Skip world quests and already-tracked quests - those show
         -- in their own sections. Bonus objectives are area-specific
         -- tasks that auto-track when you enter the zone.
         local isWorldQuest = QuestUtils_IsQuestWorldQuest and QuestUtils_IsQuestWorldQuest(questID)

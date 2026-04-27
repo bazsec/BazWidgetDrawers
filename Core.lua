@@ -128,7 +128,7 @@ addon = BazCore:RegisterAddon(ADDON_NAME, {
     },
 
     onReady = function(self)
-        -- One-time migration: BazDrawer → BazWidgetDrawers
+        -- One-time migration: BazDrawer > BazWidgetDrawers
         if BazCoreDB and BazCoreDB.profiles then
             for profileName, profileData in pairs(BazCoreDB.profiles) do
                 if profileData["BazDrawer"] and not profileData["BazWidgetDrawers"] then
@@ -499,7 +499,7 @@ end
 --   widgetGlobalOverrides[key] = { enabled = bool, value = <any> }
 --
 -- GetWidgetEffectiveSetting resolves the precedence chain:
---   global override (if enabled) → per-widget setting → default
+--   global override (if enabled) > per-widget setting > default
 ---------------------------------------------------------------------------
 
 function addon:GetGlobalOverrides()
@@ -577,7 +577,7 @@ function addon:SetWidgetDockedToBottom(id, val)
     local map = self:GetSetting("widgetDockedToBottom") or {}
     -- Always record an explicit true/false. Storing nil for "off"
     -- would cause the next IsWidgetDockedToBottom call to fall
-    -- through to the widget's registration default — silently
+    -- through to the widget's registration default - silently
     -- ignoring the user's explicit choice for any widget that
     -- declared defaultDockToBottom = true.
     map[id] = val and true or false
@@ -598,14 +598,14 @@ end
 ---------------------------------------------------------------------------
 -- Widget enabled state (per-widget, persisted; default enabled)
 --
--- A disabled widget is hidden entirely — not in the drawer slot stack,
+-- A disabled widget is hidden entirely - not in the drawer slot stack,
 -- not floating, just parked off-screen with its frame hidden. Re-enabling
 -- restores the previous dock/float state.
 ---------------------------------------------------------------------------
 
 -- Widgets new characters should see by default. Every other widget
 -- starts disabled for fresh profiles and the user opts in via the
--- Widgets settings. Existing profiles are unaffected — see
+-- Widgets settings. Existing profiles are unaffected - see
 -- widgetEnableStrict logic below.
 local DEFAULT_ENABLED_WIDGETS = {
     bazdrawer_zonetext     = true,
@@ -618,9 +618,9 @@ function addon:IsWidgetEnabled(id)
     if map[id] ~= nil then
         return map[id] and true or false
     end
-    -- Unset — fall back to the per-profile default mode.
-    -- Strict mode (fresh profiles) → only the curated allowlist is on.
-    -- Permissive mode (existing profiles pre-migration) → all on.
+    -- Unset - fall back to the per-profile default mode.
+    -- Strict mode (fresh profiles) > only the curated allowlist is on.
+    -- Permissive mode (existing profiles pre-migration) > all on.
     if self:GetSetting("widgetEnableStrict") then
         return DEFAULT_ENABLED_WIDGETS[id] == true
     end
@@ -630,7 +630,7 @@ end
 function addon:SetWidgetEnabled(id, val)
     local map = self:GetSetting("widgetEnabled") or {}
     -- Always record an explicit true/false now that "unset" has a
-    -- per-profile meaning — leaving nil would make the value depend
+    -- per-profile meaning - leaving nil would make the value depend
     -- on strict mode instead of reflecting the user's choice.
     map[id] = val and true or false
     self:SetSetting("widgetEnabled", map)
@@ -655,11 +655,11 @@ function addon:ApplyFirstRunDefaults()
         or nonEmpty("widgetFloating")
         or nonEmpty("widgetPositions")
     if hasCustomization then
-        -- Existing profile — preserve old permissive behavior so the
+        -- Existing profile - preserve old permissive behavior so the
         -- player doesn't wake up with widgets missing.
         self:SetSetting("widgetEnableStrict", false)
     else
-        -- Fresh profile — apply the curated default set.
+        -- Fresh profile - apply the curated default set.
         self:SetSetting("widgetEnableStrict", true)
     end
 end

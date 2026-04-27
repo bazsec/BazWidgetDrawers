@@ -29,7 +29,7 @@ local function EnsureAutoCompletePopup()
     popup.bg:SetPoint("BOTTOMRIGHT", 0, 4)
     popup.bg:SetColorTexture(0, 0, 0, 0.5)
 
-    -- Ornamental gold border — all pieces from Interface\QuestFrame\AutoQuest-Parts
+    -- Ornamental gold border - all pieces from Interface\QuestFrame\AutoQuest-Parts
     local PARTS = "Interface\\QuestFrame\\AutoQuest-Parts"
 
     local borderTL = popup:CreateTexture(nil, "BORDER")
@@ -115,7 +115,7 @@ local function EnsureAutoCompletePopup()
     popup.questName:SetTextColor(1, 1, 1)
 
 
-    -- Red pulse on the ? icon only — a red-tinted copy of the icon
+    -- Red pulse on the ? icon only - a red-tinted copy of the icon
     -- background that pulses via a BOUNCE animation group.
     popup.iconPulse = popup:CreateTexture(nil, "ARTWORK", nil, 3)
     popup.iconPulse:SetAllPoints(popup.iconBg)
@@ -158,7 +158,7 @@ local function EnsureAutoCompletePopup()
 end
 
 ---------------------------------------------------------------------------
--- Build — create the main widget frame
+-- Build - create the main widget frame
 ---------------------------------------------------------------------------
 
 function QT.Build()
@@ -180,7 +180,7 @@ function QT.Build()
 end
 
 ---------------------------------------------------------------------------
--- Refresh — main data polling + layout rebuild
+-- Refresh - main data polling + layout rebuild
 ---------------------------------------------------------------------------
 
 function QT.Refresh()
@@ -295,7 +295,7 @@ function QT.Refresh()
         end
     end
 
-    -- Bonus objectives (area task quests — auto-track when you enter
+    -- Bonus objectives (area task quests - auto-track when you enter
     -- the zone, auto-hide when you leave). Sorted after achievements.
     local bonusObjs = QT.GetBonusObjectives()
     if #bonusObjs > 0 then
@@ -341,7 +341,7 @@ function QT.Refresh()
             })
 
             if not collapsed then
-                -- Check for auto-complete quests — show the popup
+                -- Check for auto-complete quests - show the popup
                 -- inside this group, before the quest blocks
                 for _, quest in ipairs(group.quests) do
                     if quest.isAutoComplete and quest.isComplete then
@@ -396,7 +396,7 @@ function QT.Refresh()
 end
 
 ---------------------------------------------------------------------------
--- ApplyLayout — item-level pagination
+-- ApplyLayout - item-level pagination
 ---------------------------------------------------------------------------
 
 function QT.ApplyLayout()
@@ -515,7 +515,7 @@ function QT.Init()
     f:RegisterEvent("TRACKED_ACHIEVEMENT_LIST_CHANGED")
     -- CONTENT_TRACKING_UPDATE is the modern event for the
     -- C_ContentTracking API (used by the Achievement window's
-    -- right-click → Untrack). Without this we'd only catch the
+    -- right-click > Untrack). Without this we'd only catch the
     -- legacy tracker events and miss untrack actions.
     f:RegisterEvent("CONTENT_TRACKING_UPDATE")
     f:RegisterEvent("CRITERIA_UPDATE")
@@ -538,7 +538,7 @@ function QT.Init()
     -- QUEST_LOG_UPDATE / CRITERIA_UPDATE / TASK_PROGRESS_UPDATE etc.
     -- dozens of times within a few seconds while syncing state. Each
     -- call to QT.Refresh() rebuilds every block and header from
-    -- scratch — running it 100+ times in a single frame trips WoW's
+    -- scratch - running it 100+ times in a single frame trips WoW's
     -- "script execution time limit" addon-misbehaving error. Instead,
     -- multiple events in the same frame set a pending flag and we run
     -- exactly one Refresh at end-of-frame.

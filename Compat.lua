@@ -18,7 +18,7 @@ if not addon then return end
 -- widget has already reparented the Blizzard Minimap into our drawer
 -- wrapper, the minimap's child frames (including Zygor's map icon)
 -- are in an anchor chain whose positions haven't been resolved yet by
--- a render pass — so GetLeft() returns nil and Zygor's numeric
+-- a render pass - so GetLeft() returns nil and Zygor's numeric
 -- comparison throws "attempt to compare number with nil".
 --
 -- Zygor's own bug is missing a nil-guard on that line. We can't fix

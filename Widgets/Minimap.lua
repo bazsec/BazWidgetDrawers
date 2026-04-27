@@ -37,7 +37,7 @@ local minimapParentedInto = nil
 
 ---------------------------------------------------------------------------
 -- Parent the Minimap into the given frame (either the wrapper when docked,
--- or the wrapper when floating — the wrapper is always its immediate
+-- or the wrapper when floating - the wrapper is always its immediate
 -- parent; only the wrapper's own parent changes based on dock/float).
 ---------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ local function AttachMinimap(parent)
     raw.ClearAllPoints(Minimap)
     raw.SetPoint(Minimap, "CENTER", parent, "CENTER", 0, 0)
 
-    -- Pin Minimap's own scale to 1.0 — the widget host's SetScale on the
+    -- Pin Minimap's own scale to 1.0 - the widget host's SetScale on the
     -- wrapper handles all visual sizing. A non-1.0 Minimap scale on top
     -- would multiply and break the layout.
     Minimap:SetScale(1.0)

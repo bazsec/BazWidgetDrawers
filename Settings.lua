@@ -52,7 +52,7 @@ local function GetSettingsOptionsTable()
                     if addon.Drawer then addon.Drawer:SetWidth(val) end
                 end,
             },
-            -- "Behavior" section dropped — "Toggle Drawer" wasn't a
+            -- "Behavior" section dropped - "Toggle Drawer" wasn't a
             -- setting but a one-shot action, available via /bwd toggle.
 
             appearanceHeader = {
@@ -246,8 +246,8 @@ end
 -- Compose a widget's display label with status + tag badges
 --
 -- Returns "<label>  [D]  [LDB]  ..." where:
---   - [D] (green) — dormant widget that is currently sleeping
---   - widget.tags (any) — static badges set at registration time, each
+--   - [D] (green) - dormant widget that is currently sleeping
+--   - widget.tags (any) - static badges set at registration time, each
 --     of the form { text = "X", color = "rrggbb" }. Lets addons like
 --     BazBrokerWidget mark every widget they provide so the user knows
 --     where it came from at a glance.
@@ -283,7 +283,7 @@ local function BuildWidgetGroup(widget, index, total)
             order = 0.05,
             type = "toggle",
             name = "Enabled",
-            desc = "Turn this widget on or off entirely. A disabled widget is hidden everywhere — not docked in any drawer, not floating, and any side-effects (e.g. durability-frame override for Repair) are restored to defaults.",
+            desc = "Turn this widget on or off entirely. A disabled widget is hidden everywhere - not docked in any drawer, not floating, and any side-effects (e.g. durability-frame override for Repair) are restored to defaults.",
             get = function() return addon:IsWidgetEnabled(id) end,
             set = function(_, val)
                 if addon.WidgetHost and addon.WidgetHost.SetWidgetEnabled then
@@ -297,11 +297,11 @@ local function BuildWidgetGroup(widget, index, total)
             order = 0.06,
             type = "note",
             style = "info",
-            text = "Disabling a widget hides it everywhere — no drawer slot, no floating frame. Any side-effects (like the Repair widget's durability-frame override) are also restored to Blizzard defaults.",
+            text = "Disabling a widget hides it everywhere - no drawer slot, no floating frame. Any side-effects (like the Repair widget's durability-frame override) are also restored to Blizzard defaults.",
         },
-        -- Move Up/Down buttons removed — ordering is handled by
+        -- Move Up/Down buttons removed - ordering is handled by
         -- drag-to-reorder on the widget's title bar inside the drawer
-        -- (hold half a second → drag). Having the buttons here was
+        -- (hold half a second > drag). Having the buttons here was
         -- misleading since the order is global, not per-drawer.
         dockingHeader = { order = 1, type = "header", name = "Docking" },
         floating = {
@@ -382,7 +382,7 @@ local function BuildWidgetGroup(widget, index, total)
     -- Widgets can supply their own options via widget:GetOptionsArgs().
     -- Their internal order values (often 1..N) would collide with the
     -- top-level Docking/Fading order slots, so we shift them all into
-    -- the 20+ range — preserving the widget's own relative ordering
+    -- the 20+ range - preserving the widget's own relative ordering
     -- while guaranteeing they sit after the "Widget Settings" header.
     if widget.GetOptionsArgs then
         local ok, extra = pcall(widget.GetOptionsArgs, widget)
@@ -747,7 +747,7 @@ local function BuildDrawerGroup(drawerDef, drawerId, index, total)
         order = 100.5,
         type = "note",
         style = "danger",
-        text = "Permanently removes this drawer tab. The widgets it contained are unaffected — they stay registered and can be assigned to other drawers.",
+        text = "Permanently removes this drawer tab. The widgets it contained are unaffected - they stay registered and can be assigned to other drawers.",
     }
     args.deleteDrawer = {
         order = 101,
@@ -1010,7 +1010,7 @@ BazCore:QueueForLogin(function()
     -- Widgets subcategory (list/detail - same shape as BazBars' Bar Options)
     BazCore:RegisterOptionsTable("BazWidgetDrawers-Widgets", GetWidgetsOptionsTable)
     BazCore:AddToSettings("BazWidgetDrawers-Widgets", "Widgets", "BazWidgetDrawers")
-    -- Enable/Disable sub-category merged into the Widgets page — each
+    -- Enable/Disable sub-category merged into the Widgets page - each
     -- widget's detail panel now has an "Enabled" toggle at the top.
     -- GetModulesOptionsTable is still defined but no longer exposed
     -- as a separate sidebar entry.

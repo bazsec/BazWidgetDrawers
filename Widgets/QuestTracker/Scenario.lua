@@ -50,7 +50,7 @@ function QT.GetScenarioData()
     -- Build the objective list strictly from criteria. The stage's
     -- *description* (e.g. "Assist the haranir as they battle against
     -- unknown attackers.") was previously prepended here as an extra
-    -- objective bullet, which Blizzard's tracker doesn't do — they
+    -- objective bullet, which Blizzard's tracker doesn't do - they
     -- show the description only as a hover tooltip on the stage box.
     -- Pass it back as stageDescription so the renderer can wire that
     -- tooltip without recomputing it.

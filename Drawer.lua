@@ -87,7 +87,7 @@ local function ApplyToggleAtlases(btn, prefix, flipH)
 
     -- Ensure the button has normal/pushed textures. Button:GetNormalTexture
     -- returns nil if SetNormalTexture/SetNormalAtlas has never been called,
-    -- so we always do the SetAtlas path first — then apply the horizontal
+    -- so we always do the SetAtlas path first - then apply the horizontal
     -- flip on top if requested.
     btn:SetNormalAtlas(normal)
     btn:SetPushedAtlas(pressed)
@@ -135,7 +135,7 @@ function Drawer:Build()
     f:SetBackdropColor(0, 0, 0, addon:GetSetting("backgroundOpacity") or 0.9)
     f:SetBackdropBorderColor(1, 1, 1, 1)
 
-    -- Display frame — holds all content (hidden when collapsed)
+    -- Display frame - holds all content (hidden when collapsed)
     local display = CreateFrame("Frame", "BazWidgetDrawersDisplayFrame", f)
     display:SetPoint("TOPLEFT", 8, -8)
     display:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -155,7 +155,7 @@ function Drawer:Build()
     display.label:SetPoint("LEFT", 4, 0)
     display.label:SetText("BAZWIDGETDRAWERS")
 
-    -- Lock button — parented to chromeGroup so it fades with the rest
+    -- Lock button - parented to chromeGroup so it fades with the rest
     -- of the chrome (label, count, info button). When locked, the chrome
     -- is hidden but the lock gets its own hover-based visibility via
     -- ApplyLockUI.
@@ -194,7 +194,7 @@ function Drawer:Build()
     display.countLabel:SetJustifyH("RIGHT")
     display.countLabel:SetText("0")
 
-    -- Widget host — takes the full top area, leaves room for the chrome
+    -- Widget host - takes the full top area, leaves room for the chrome
     -- group at the bottom.
     local host = CreateFrame("Frame", "BazWidgetDrawersWidgetHost", display)
     host:SetPoint("TOPLEFT", 4, -4)
@@ -205,7 +205,7 @@ function Drawer:Build()
         addon.WidgetHost:Initialize(host)
     end
 
-    -- Legacy toggle button (hidden — replaced by tab strip)
+    -- Legacy toggle button (hidden - replaced by tab strip)
     f.toggleButton = self:BuildToggleButton("BazWidgetDrawersToggleButton", f)
     f.toggleButton:Hide()
 
@@ -242,7 +242,7 @@ function Drawer:BuildToggleButton(name, parent)
 end
 
 ---------------------------------------------------------------------------
--- ApplySide — re-anchors frame, tab buttons, and swaps tab atlases based
+-- ApplySide - re-anchors frame, tab buttons, and swaps tab atlases based
 -- on the current side setting. Called on build, on collapse/expand, and
 -- when the user changes the side in settings.
 ---------------------------------------------------------------------------
@@ -278,20 +278,20 @@ function Drawer:ApplySide()
     end
 
     -- Arrow direction (after any flip):
-    -- Expanded → click collapses drawer toward its edge (arrow toward edge).
-    -- Collapsed → click expands drawer toward screen center.
+    -- Expanded > click collapses drawer toward its edge (arrow toward edge).
+    -- Collapsed > click expands drawer toward screen center.
     --
-    -- Native arrows: gm-btnforward = →, gm-btnback = ←
+    -- Native arrows: gm-btnforward = >, gm-btnback = ←
     -- Flipped on the left side: each atlas mirrors, so btnforward renders as ←
-    -- and btnback renders as →.
+    -- and btnback renders as >.
     local prefixExpanded, prefixCollapsed
     if flipTab then
         -- We want ← when expanded on the left (collapse left). Use btnforward
-        -- (native →) and flip to render ←.
+        -- (native >) and flip to render ←.
         prefixExpanded = "gm-btnforward"
         prefixCollapsed = "gm-btnback"
     else
-        prefixExpanded = "gm-btnforward"  -- native → (collapse right)
+        prefixExpanded = "gm-btnforward"  -- native > (collapse right)
         prefixCollapsed = "gm-btnback"    -- native ← (expand left)
     end
 
@@ -308,7 +308,7 @@ function Drawer:ApplySide()
     f:SetPoint(topPoint, UIParent, topPoint, x, 0)
     f:SetPoint(bottomPoint, UIParent, bottomPoint, x, 0)
 
-    -- Legacy toggle button — kept for structure but hidden (tabs replace it)
+    -- Legacy toggle button - kept for structure but hidden (tabs replace it)
     f.toggleButton:ClearAllPoints()
     f.toggleButton:SetPoint(tabSelf, f, tabRelative, tabXOffset, 0)
     f.toggleButton:Hide()
@@ -440,7 +440,7 @@ function Drawer:Toggle()
 end
 
 ---------------------------------------------------------------------------
--- Tab strip — vertical stack of text tabs on the drawer edge.
+-- Tab strip - vertical stack of text tabs on the drawer edge.
 --
 -- When all drawers are collapsed: all tabs visible (pick which to open).
 -- When one is open: only that drawer's tab visible (click to close).
@@ -593,10 +593,10 @@ function Drawer:RefreshTabs()
                     -- Switch to a different drawer
                     addon:SetActiveDrawer(drawerId)
                     if Drawer.collapsed then
-                        -- All drawers collapsed — just expand the new one
+                        -- All drawers collapsed - just expand the new one
                         Drawer:Expand()
                     else
-                        -- Another drawer is open — swap content instantly
+                        -- Another drawer is open - swap content instantly
                         -- (the drawer is already in position)
                         local display = f.displayFrame
                         if display then
@@ -674,7 +674,7 @@ function Drawer:ApplyLockUI(skipFade)
     end
 
     -- Hide/show the rest of the chrome based on the lock state.
-    -- When locked, only the lock button stays — and even that only
+    -- When locked, only the lock button stays - and even that only
     -- shows while the cursor is over the drawer.
     local showChrome = not locked
     if display.label      then display.label:SetShown(showChrome)      end
@@ -741,12 +741,12 @@ function Drawer:SetWidth(width)
 end
 
 ---------------------------------------------------------------------------
--- Appearance — background color + frame opacity
+-- Appearance - background color + frame opacity
 ---------------------------------------------------------------------------
 
 function Drawer:ApplyAppearance()
     local f = self.frame; if not f then return end
-    -- Background + border are driven entirely by the fade controller —
+    -- Background + border are driven entirely by the fade controller -
     -- they tween between the user's "full" values (backgroundOpacity /
     -- frameOpacity) and the faded values, so just re-evaluate.
     if self.EvaluateFade then self:EvaluateFade(true) end
@@ -757,7 +757,7 @@ end
 --
 -- Two inputs drive the fade state:
 --   1. A 0.1s poll on the drawer frame that checks MouseIsOver(drawer)
---      and MouseIsOver(tab) — used while the drawer is expanded.
+--      and MouseIsOver(tab) - used while the drawer is expanded.
 --   2. A dedicated "edge hot zone" frame anchored to the full active
 --      screen edge that fires OnEnter/OnLeave when the cursor touches
 --      anywhere along that edge. This way "moving to the edge" reveals
@@ -770,7 +770,7 @@ end
 ---------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------
--- Edge hot zone — full-height strip on the active screen edge
+-- Edge hot zone - full-height strip on the active screen edge
 ---------------------------------------------------------------------------
 
 function Drawer:SetupEdgeHotZone()
@@ -824,7 +824,7 @@ end
 
 ---------------------------------------------------------------------------
 -- Custom backdrop tween (alpha is not a property of SetBackdropColor, so
--- we can't use UIFrameFade for it — we interpolate manually)
+-- we can't use UIFrameFade for it - we interpolate manually)
 ---------------------------------------------------------------------------
 
 local function Lerp(a, b, t)
@@ -901,7 +901,7 @@ end
 ---------------------------------------------------------------------------
 -- Target computation
 --
--- Returns (bgTarget, borderTarget, tabTarget) — the three chrome elements
+-- Returns (bgTarget, borderTarget, tabTarget) - the three chrome elements
 -- that fade together. Widgets (inside the widget host) are NOT fade
 -- targets: they always stay at full alpha so the content is always
 -- readable even when the drawer chrome has faded down.
@@ -924,7 +924,7 @@ function Drawer:ComputeFadeTargets()
         return bgFaded, fadedA, fadedA
     end
 
-    -- Locked drawers always return the faded state — hover is ignored
+    -- Locked drawers always return the faded state - hover is ignored
     -- for the backdrop/border so the drawer never un-fades on mouseover.
     -- (The lock icon's hover visibility is handled separately in
     -- ApplyLockUI, and docked widget content still stays at full alpha.)
@@ -950,7 +950,7 @@ function Drawer:ComputeFadeTargets()
         return bg, border, fadedA
     end
 
-    -- Expanded and not hovered → fade chrome
+    -- Expanded and not hovered > fade chrome
     return FadedState()
 end
 
@@ -960,7 +960,7 @@ function Drawer:EvaluateFade(force)
     local f = self.frame; if not f then return end
 
     -- Refresh the lock icon atlas and chrome visibility (but NOT the
-    -- lock fade — that's handled inside Apply so it shares the delay).
+    -- lock fade - that's handled inside Apply so it shares the delay).
     self:ApplyLockUI(true)
 
     local bgTarget, borderTarget, tabTarget = self:ComputeFadeTargets()
@@ -1024,7 +1024,7 @@ function Drawer:EvaluateFade(force)
         -- handles its visibility via hover detection.
 
         -- Widget slot title bars and backgrounds (per-widget settings,
-        -- with global overrides). These aren't tweened per-slot — they
+        -- with global overrides). These aren't tweened per-slot - they
         -- snap to the current chrome target because the drawer's own
         -- backdrop/chrome is already smoothly animating to it.
         local fullA = addon:GetSetting("frameOpacity") or 1.0

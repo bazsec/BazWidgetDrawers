@@ -25,13 +25,13 @@ local MIN_HEIGHT   = PAD * 2 + BUTTON_SIZE
 -- adopted button gets reparented into a slot, which pins its CENTER to
 -- the slot's CENTER so positioning is immune to SetPoint clobbering.
 -- Empty slots are hidden; visible buttons fill slots in order. Future
--- custom-ordering can map button name → slot index via a persisted
+-- custom-ordering can map button name > slot index via a persisted
 -- table without changing any of the rendering code.
 local INITIAL_SLOTS = 12  -- pre-built; LayoutButtons grows the pool on demand
 
 -- Queue eye (dungeon/raid/PVP LFG button). Lives in MicroMenuContainer,
 -- not Minimap, so it needs special handling outside the normal scanner.
--- It's also dynamically shown/hidden by Blizzard based on queue state —
+-- It's also dynamically shown/hidden by Blizzard based on queue state -
 -- LayoutButtons already filters by IsShown() so we just need to re-run
 -- the layout on queue events.
 local QUEUE_EYE_EVENTS = {
@@ -301,7 +301,7 @@ function MinimapButtonsWidget:LayoutButtons()
     local nSlots = #self.slots
 
     -- Reposition slots to the centered grid and assign buttons. We
-    -- DO NOT call btn:Show() — the buttons are already shown (they're
+    -- DO NOT call btn:Show() - the buttons are already shown (they're
     -- in `list` because we filtered for visibility), and calling Show
     -- would retrigger the hooksecurefunc hooks and recurse.
     for i = 1, nSlots do
@@ -317,7 +317,7 @@ function MinimapButtonsWidget:LayoutButtons()
             -- Always force reparent + re-anchor. Blizzard's
             -- MicroMenu:Layout can steal the QueueStatusButton back
             -- between our layout passes, so we can't rely on a
-            -- parent-check guard here — we must assert ownership
+            -- parent-check guard here - we must assert ownership
             -- every single pass.
             btn:SetParent(slot)
             btn:ClearAllPoints()
@@ -390,7 +390,7 @@ local function AdoptQueueEye(widget)
         end)
     end
 
-    -- Use SetScale — QueueStatusButton has a child Eye frame at 30×30
+    -- Use SetScale - QueueStatusButton has a child Eye frame at 30×30
     -- plus a 96×96 glow overlay child, and those aren't reachable via
     -- SetSize. Scaling the whole button proportionally keeps everything
     -- in alignment.
@@ -424,7 +424,7 @@ function MinimapButtonsWidget:Scan()
         end
     end
 
-    -- Queue eye (special case — different parent)
+    -- Queue eye (special case - different parent)
     AdoptQueueEye(self)
 
     self:LayoutButtons()
@@ -448,7 +448,7 @@ local function FriendlyName(btnName)
     if not btnName or btnName == "" then return "Unknown" end
     -- Strip the LibDBIcon prefix
     local stripped = btnName:gsub("^LibDBIcon10_", "")
-    -- Split CamelCase: "BazNotificationCenter" → "Baz Notification Center"
+    -- Split CamelCase: "BazNotificationCenter" > "Baz Notification Center"
     stripped = stripped:gsub("([a-z])([A-Z])", "%1 %2")
     -- Special-case the queue eye
     if btnName == "QueueStatusButton" then return "Queue Eye" end
@@ -569,7 +569,7 @@ function MinimapButtonsWidget:Init()
         GetOptionsArgs   = function() return MinimapButtonsWidget:GetOptionsArgs() end,
     })
 
-    -- Queue eye event handler — re-run layout whenever LFG/PVP queue
+    -- Queue eye event handler - re-run layout whenever LFG/PVP queue
     -- state changes so the adopted QueueStatusButton appears or
     -- disappears in the grid as Blizzard shows/hides it.
     for _, ev in ipairs(QUEUE_EYE_EVENTS) do

@@ -38,7 +38,7 @@ local function IsHideDefaultDurability()
     return addon:GetWidgetSetting(WIDGET_ID, "hideBlizzardDurability", true) ~= false
 end
 
--- Paper doll mode: "blizzard" (Blizzard's DurabilityFrame reparented in —
+-- Paper doll mode: "blizzard" (Blizzard's DurabilityFrame reparented in -
 -- the default), "custom" (our icon grid), or "none" (hidden entirely).
 local function PaperDollMode()
     -- Back-compat: old bool setting named "showPaperDoll"
@@ -74,7 +74,7 @@ local savedDefaultHideSelection, savedSelectionShow
 local NOOP = function() end
 
 ---------------------------------------------------------------------------
--- Full suppression — hide DurabilityFrame and use hooksecurefunc to
+-- Full suppression - hide DurabilityFrame and use hooksecurefunc to
 -- re-hide it whenever Blizzard tries to Show it. The old approach of
 -- replacing DurabilityFrame.Show with Hide tainted the frame's method
 -- table, which propagated through UIParentRightManagedFrameContainer
@@ -91,7 +91,7 @@ local function SuppressDurabilityFrame()
 
     -- Hook Show ONCE so any Blizzard-initiated Show is immediately
     -- re-hidden. hooksecurefunc runs AFTER the original method, so
-    -- the frame flickers for one frame then hides — imperceptible.
+    -- the frame flickers for one frame then hides - imperceptible.
     if not durabilityHooked then
         hooksecurefunc(DurabilityFrame, "Show", function(self)
             if durabilitySuppressed then
@@ -114,14 +114,14 @@ local function UnsuppressDurabilityFrame()
     durabilitySuppressed = false
 end
 
--- Forward declaration — defined after the hide setting is read from the
+-- Forward declaration - defined after the hide setting is read from the
 -- addon DB so that external enable/disable hooks can call it too.
 local ApplyDurabilityVisibility
 
 local function DockBlizzardDurability(anchor)
     if durabilityDocked or not DurabilityFrame then return end
 
-    -- Docking overrides suppression — unlock Show before parenting so
+    -- Docking overrides suppression - unlock Show before parenting so
     -- the frame can actually render inside our widget.
     UnsuppressDurabilityFrame()
 
@@ -134,7 +134,7 @@ local function DockBlizzardDurability(anchor)
 
     -- Disable Blizzard's Edit Mode handling for this frame. Several layers
     -- here so any one of them is enough:
-    --   1. `defaultHideSelection = true` — EditModeSystemMixin:OnEditModeEnter
+    --   1. `defaultHideSelection = true` - EditModeSystemMixin:OnEditModeEnter
     --      checks this and skips the highlight if true.
     --   2. Override OnEditModeEnter / OnEditModeExit / HighlightSystem to
     --      no-ops in case the mixin dispatch bypasses #1.
@@ -204,7 +204,7 @@ end
 --   1. docked into the widget (mode=blizzard + widget enabled),
 --   2. suppressed entirely (hide option on OR widget disabled),
 --   3. restored to Blizzard defaults (hide option off and widget disabled
---      with mode not blizzard — rare, only if user explicitly wants it).
+--      with mode not blizzard - rare, only if user explicitly wants it).
 ---------------------------------------------------------------------------
 
 ApplyDurabilityVisibility = function(anchor, mode)
@@ -216,7 +216,7 @@ ApplyDurabilityVisibility = function(anchor, mode)
         return
     end
 
-    -- Not docking — release any existing dock first so parenting is clean
+    -- Not docking - release any existing dock first so parenting is clean
     UndockBlizzardDurability()
 
     if IsHideDefaultDurability() then
@@ -244,7 +244,7 @@ local DURABILITY_SLOTS = {
 }
 
 ---------------------------------------------------------------------------
--- Durability color ramp: 100% green → 50% yellow → 0% red
+-- Durability color ramp: 100% green > 50% yellow > 0% red
 ---------------------------------------------------------------------------
 
 local function ColorForPct(pct)
@@ -294,7 +294,7 @@ function RepairWidget:GetStatusText()
     return string.format("%d%%", math.floor(avg * 100 + 0.5)), r, g, b
 end
 
--- Options exposed in the BazWidgetDrawers → Widgets → Repair page
+-- Options exposed in the BazWidgetDrawers > Widgets > Repair page
 function RepairWidget:GetOptionsArgs()
     return {
         appearanceHeader = {
@@ -399,7 +399,7 @@ function RepairWidget:Build()
         f.slots[i] = { icon = icon, info = info }
     end
 
-    -- Damaged list area — rows occupy the middle + right columns
+    -- Damaged list area - rows occupy the middle + right columns
     -- (name left-aligned in col 2, percentage right-aligned in col 3).
     f.listRows = {}
 
@@ -420,7 +420,7 @@ function RepairWidget:GetOrCreateRow(index)
     if row then return row end
 
     -- Row spans columns 2+3. Name takes column 2 left-aligned, percentage
-    -- takes column 3 right-aligned — explicit column anchoring so the
+    -- takes column 3 right-aligned - explicit column anchoring so the
     -- two values line up perfectly between rows.
     row = CreateFrame("Frame", nil, f)
     row:SetHeight(ROW_HEIGHT)

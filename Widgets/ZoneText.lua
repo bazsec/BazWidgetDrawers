@@ -28,17 +28,17 @@ addon.ZoneWidget = ZoneWidget
 local function GetZoneColor()
     local pvpType, _, factionName = GetZonePVPInfo()
     if pvpType == "sanctuary" then
-        return 0.41, 0.80, 0.94   -- light blue — sanctuary
+        return 0.41, 0.80, 0.94   -- light blue - sanctuary
     elseif pvpType == "arena" then
-        return 1.00, 0.10, 0.10   -- bright red — arena
+        return 1.00, 0.10, 0.10   -- bright red - arena
     elseif pvpType == "friendly" then
-        return 0.10, 1.00, 0.10   -- bright green — friendly territory
+        return 0.10, 1.00, 0.10   -- bright green - friendly territory
     elseif pvpType == "hostile" then
-        return 1.00, 0.10, 0.10   -- bright red — hostile territory
+        return 1.00, 0.10, 0.10   -- bright red - hostile territory
     elseif pvpType == "contested" then
-        return 1.00, 0.70, 0.00   -- orange — contested
+        return 1.00, 0.70, 0.00   -- orange - contested
     elseif pvpType == "combat" then
-        return 1.00, 0.10, 0.10   -- bright red — active combat zone
+        return 1.00, 0.10, 0.10   -- bright red - active combat zone
     end
     return 1.00, 0.82, 0.00       -- default gold
 end
@@ -75,7 +75,7 @@ function ZoneWidget:GetDesiredHeight()
 end
 
 function ZoneWidget:GetStatusText()
-    -- No title bar status — the zone text IS the whole widget
+    -- No title bar status - the zone text IS the whole widget
     return "", 0.85, 0.85, 0.85
 end
 

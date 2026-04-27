@@ -325,40 +325,26 @@ function QT.GetAchievementData(achievementID)
         end
     end
 
+    -- Only collect INCOMPLETE criteria. Matches BWD's compact tracker
+    -- philosophy: the player is tracking the achievement to see what
+    -- they still have to do, so finished sub-achievements / steps are
+    -- noise. The default Blizzard tracker shows them all with green
+    -- checks; we deliberately don't.
     local objectives = {}
     local numCriteria = (GetAchievementNumCriteria and GetAchievementNumCriteria(achievementID)) or 0
     for i = 1, numCriteria do
         if GetAchievementCriteriaInfo then
-            local ok, critString, _, critCompleted, quantity, reqQuantity, _, _, assetID =
+            local ok, critString, _, critCompleted, quantity, reqQuantity =
                 pcall(GetAchievementCriteriaInfo, achievementID, i)
-            if ok then
-                local text = critString or ""
-                -- Meta-achievement criteria where the criterion is a
-                -- sub-achievement (e.g., Loremaster of Midnight) come
-                -- back with an empty critString once the sub-achievement
-                -- is COMPLETED on retail. Fall back to
-                -- GetAchievementInfo(assetID) to recover the sub-
-                -- achievement's name so completed entries still render
-                -- with their proper label - matching Blizzard's own
-                -- tracker, which shows every sub-achievement with a
-                -- green check (completed) or a dash (in progress).
-                if (text == "" or not text)
-                   and assetID and assetID ~= 0
-                   and GetAchievementInfo then
-                    local ok2, _, subName = pcall(GetAchievementInfo, assetID)
-                    if ok2 and subName and subName ~= "" then
-                        text = subName
-                    end
+            if ok and critString and critString ~= "" and not critCompleted then
+                local text = critString
+                if reqQuantity and reqQuantity > 1 and quantity then
+                    text = text .. " (" .. quantity .. "/" .. reqQuantity .. ")"
                 end
-                if text and text ~= "" then
-                    if reqQuantity and reqQuantity > 1 and quantity then
-                        text = text .. " (" .. quantity .. "/" .. reqQuantity .. ")"
-                    end
-                    objectives[#objectives + 1] = {
-                        text     = text,
-                        finished = critCompleted and true or false,
-                    }
-                end
+                objectives[#objectives + 1] = {
+                    text     = text,
+                    finished = false,
+                }
             end
         end
     end

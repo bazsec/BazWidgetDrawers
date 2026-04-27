@@ -653,7 +653,38 @@ function QT.PopulateBlock(block, quest)
     local lineGap = isScenario and C.SCENARIO_OBJ_LINE_GAP or C.OBJ_LINE_GAP
     local objTotalH = anchorGap
 
-    for i, obj in ipairs(quest.objectives) do
+    -- When a regular quest is COMPLETE (ready to turn in), Blizzard's
+    -- own tracker (Blizzard_QuestObjectiveTracker.lua:289-318) replaces
+    -- the original objectives with a single completion line:
+    --   * isAutoComplete -> "Quest Complete" + "Click to Complete"
+    --   * has completionText -> the completion text (e.g., "Return to NPC X")
+    --   * neither -> "Ready for Turn-In"
+    -- The replacement line uses no dash and no check (OBJECTIVE_DASH_STYLE_HIDE).
+    -- Without this, our tracker keeps showing stale "Find X" objectives for
+    -- quests the player has already finished, which clutters the panel
+    -- and disagrees with the default tracker.
+    --
+    -- World quests, achievements, and scenarios keep their original
+    -- objective rendering - only "kind == 'quest'" gets the substitution.
+    local objectivesToRender = quest.objectives
+    if quest.kind == "quest" and quest.isComplete then
+        if quest.isAutoComplete then
+            objectivesToRender = {
+                { text = _G.QUEST_WATCH_QUEST_COMPLETE   or "Quest Complete",     finished = false, hideDash = true },
+                { text = _G.QUEST_WATCH_CLICK_TO_COMPLETE or "Click to Complete", finished = false, hideDash = true },
+            }
+        elseif quest.completionText and quest.completionText ~= "" then
+            objectivesToRender = {
+                { text = quest.completionText, finished = false, hideDash = true },
+            }
+        else
+            objectivesToRender = {
+                { text = _G.QUEST_WATCH_QUEST_READY or "Ready for Turn-In", finished = false, hideDash = true },
+            }
+        end
+    end
+
+    for i, obj in ipairs(objectivesToRender) do
         local entry = block.objectives[i]
         if not entry or not entry.icon then
             local line = CreateFrame("Frame", nil, block)
@@ -697,6 +728,15 @@ function QT.PopulateBlock(block, quest)
                 or  "ui-questtracker-objective-nub")
             line.text:SetWidth(objWidth)
             line.text:SetText(obj.text or "")
+        elseif obj.hideDash then
+            -- Completion lines (e.g., "Return to NPC X", "Ready for
+            -- Turn-In", "Click to Complete") render as plain text with
+            -- no dash prefix and no check icon - matches Blizzard's
+            -- OBJECTIVE_DASH_STYLE_HIDE flag.
+            line.icon:Hide()
+            line.text:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
+            line.text:SetWidth(objWidth)
+            line.text:SetText(obj.text or "")
         elseif obj.finished then
             PositionCheckOrNub("ui-questtracker-tracker-check")
             line.text:SetWidth(objWidth - C.NUB_SIZE - C.NUB_TEXT_GAP)
@@ -710,7 +750,9 @@ function QT.PopulateBlock(block, quest)
             line.text:SetText("- " .. (obj.text or ""))
         end
 
-        if obj.finished then
+        if obj.finished or obj.hideDash then
+            -- Completion lines (hideDash) use the "Complete" colour
+            -- the same way Blizzard's tracker does.
             line.text:SetTextColor(QT.GetObjectiveDone())
         else
             line.text:SetTextColor(QT.GetObjectiveColor())
@@ -726,8 +768,11 @@ function QT.PopulateBlock(block, quest)
         objTotalH = objTotalH + lineH + lineGap
     end
 
-    -- Hide unused objective lines
-    for i = #quest.objectives + 1, #block.objectives do
+    -- Hide unused objective lines (use objectivesToRender, not the
+    -- raw quest.objectives, since complete quests render a single
+    -- substituted line and the rest of the original objectives need
+    -- to be hidden).
+    for i = #objectivesToRender + 1, #block.objectives do
         local stale = block.objectives[i]
         if stale then
             if stale.Hide then stale:Hide() end

@@ -30,13 +30,13 @@ BazWidgetDrawers is fully extensible: any addon can publish widgets via LibBazWi
 
 ### Smart Fade System
 
-*   **Chrome fades as a unit** - backdrop, border, pull-tab, and bottom bar all tween together via UIFrameFade
-*   **Default faded opacity is 0** (fully invisible) - the drawer disappears when not hovered
-*   **Widget content always at full opacity** - quest text, minimap, and status info stay readable
+*   **Chrome fades as a unit** — backdrop, border, pull-tab, and bottom bar all fade together
+*   **Default faded opacity is 0** (fully invisible) — the drawer disappears when not hovered
+*   **Widget content always at full opacity** — quest text, minimap, and status info stay readable
 *   **Configurable fade delay** (0-5 s), **fade duration** (0.05-2 s), and **faded opacity target** (0-1)
 *   **Force full opacity in combat** (optional)
-*   **Fade tab when closed** (optional) - lets the pull-tab disappear when the drawer is collapsed
-*   **Edge hot zone** - invisible strip along the screen edge re-reveals the tab when collapsed
+*   **Fade tab when closed** (optional) — lets the pull-tab disappear when the drawer is collapsed
+*   **Edge hot zone** — invisible strip along the screen edge re-reveals the tab when collapsed
 
 ### Lock System
 
@@ -74,19 +74,19 @@ Some widgets are dormant - they only appear in the drawer when a condition is me
 
 ### Quest Tracker
 
-Full Blizzard objective tracker replica. Pure read-only polling of C_QuestLog, C_Scenario, C_ContentTracking, and friends - taint-safe by design.
+Full replica of Blizzard's objective tracker, but as a drawer widget. Read-only by design — never reparents protected frames, so it's safe in combat and doesn't fight Blizzard for control of the tracker.
 
-*   **Dungeon / Scenario section** with decorative stage block using Blizzard's scenario atlas textures, graphic orb bullets that turn into green checkmarks on completion, and auto-hide when leaving the instance
-*   **Quest sections** binned by classification: Campaign, Questlines, Legendary, Callings, Quests - with collapsible group headers using Blizzard's ornamental atlases
-*   **Achievement section** with click-to-open and right-click-to-untrack
-*   **Bonus objectives** from area task quests
+*   **Dungeon / Scenario section** with stage block, orb bullets that turn into green checkmarks on completion, and auto-hide when leaving the instance
+*   **Quest sections** grouped by classification — Campaign, Questlines, Legendary, Callings, Quests — each collapsible
+*   **Achievement section** — click to open, right-click to untrack
+*   **Bonus objectives** from area-task quests
 *   **Progress bars** with Blizzard's native border styling
-*   **Quest item buttons** using QuestObjectiveItemButtonTemplate
+*   **Quest item buttons** that work like Blizzard's (right-click to use, etc.)
 *   **Auto-complete popup** with pulse animation for turn-in quests
-*   **Native POI buttons** - click to super-track, click title to open map, right-click to untrack
-*   **Item-level pagination** - scroll through quests one at a time with the mouse wheel
+*   **POI buttons** — click to super-track, click title to open map, right-click to untrack
+*   **Mouse-wheel pagination** — scroll through quests one at a time
 *   **M+ Challenge Mode block** with keystone timer, affixes, and death count
-*   **Waypoint integration** - TomTom and Zygor support for super-tracked quest waypoints
+*   **Waypoint integration** — TomTom and Zygor support for super-tracked quest waypoints
 *   **Hide Default Tracker** option (default on)
 
 ### Zone Text
@@ -99,7 +99,7 @@ Reparents the real Blizzard minimap into the drawer at a fixed scale. All native
 
 ### Minimap Buttons
 
-Adopts LibDBIcon and other addon-registered minimap buttons into a centered grid with customizable button ordering. Whitelist-based detection (LibDBIcon10_* prefix + known buttons). The LFG queue eye is always captured into slot 1.
+Adopts LibDBIcon and other addon-registered minimap buttons into a centered grid with customizable button ordering. Detects buttons by name pattern + a known-good list. The LFG queue eye always lands in the first slot.
 
 ### Micro Menu
 
@@ -107,7 +107,7 @@ Reparents the Blizzard micro menu bar (character, spellbook, talents, LFG, achie
 
 ### Info Bar
 
-Compact horizontal bar combining the Blizzard clock (1.25x scale), day-of-month calendar button (taint-safe proxy), and native minimap tracking dropdown. Server time displayed in the widget title bar.
+Compact horizontal bar combining the Blizzard clock, a calendar shortcut, and the minimap tracking dropdown. Server time also shows in the widget title bar.
 
 ***
 

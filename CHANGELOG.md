@@ -2,6 +2,14 @@
 
 > Renamed from BazDrawer to BazWidgetDrawers in v016. Settings are migrated automatically.
 
+## 056 — User guide refresh
+
+The in-game User Manual now has dedicated pages for Auto-Switch
+(per-context drawer triggers — Open World, Dungeon, Raid, M+, Delve,
+BG, Arena), Choosing Widgets per Drawer (the Widgets-page-then-Drawers-
+page workflow with the new opt-in default), Profiles, and a polished
+Welcome with current slash commands.
+
 ## 055 — Newly enabled widgets stay off in drawers until you add them
 
 Turning a widget on in the Widgets page no longer auto-adds it to every

@@ -322,6 +322,21 @@ function QT.Refresh()
         end
     end
 
+    -- Tracked recipes (Track Recipe checkbox in the Professions panel).
+    -- Sorted after world quests so the section sits at the bottom.
+    if QT.GetTrackedRecipes then
+        local recipes = QT.GetTrackedRecipes()
+        if #recipes > 0 then
+            local recipeGroupIdx = 300
+            groups[recipeGroupIdx] = {
+                label  = _G.PROFESSIONS_TRACKER_HEADER_PROFESSION or "Recipes",
+                quests = recipes,
+                kind   = "recipe",
+            }
+            table.insert(groupOrder, recipeGroupIdx)
+        end
+    end
+
     table.sort(groupOrder)
 
     -- Build flat items list
@@ -528,6 +543,12 @@ function QT.Init()
     -- World quest events
     f:RegisterEvent("WORLD_QUEST_COMPLETED_BY_SPELL")
     f:RegisterEvent("TASK_PROGRESS_UPDATE")
+    -- Tracked recipes (Profession panel "Track Recipe"). BAG_UPDATE_DELAYED
+    -- and CURRENCY_DISPLAY_UPDATE drive the reagent count refresh, the
+    -- way Blizzard's own ProfessionsRecipeTracker does.
+    f:RegisterEvent("TRACKED_RECIPE_UPDATE")
+    f:RegisterEvent("BAG_UPDATE_DELAYED")
+    f:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
     -- M+ events
     f:RegisterEvent("CHALLENGE_MODE_START")
     f:RegisterEvent("CHALLENGE_MODE_COMPLETED")

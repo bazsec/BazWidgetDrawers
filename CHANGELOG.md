@@ -2,6 +2,16 @@
 
 > Renamed from BazDrawer to BazWidgetDrawers in v016. Settings are migrated automatically.
 
+## 058 — Quest Tracker shows tracked recipes
+
+Tracking a recipe from the Professions panel now adds it to the
+Quest Tracker widget under a "Professions" header, the same way
+Blizzard's default tracker handles it. Each tracked recipe lists
+its required reagents with a live "have / need" count; reagents
+you've collected enough of show a check mark and dim out as you
+loot more. Left-click a recipe to open it in the Professions
+panel; right-click to stop tracking it.
+
 ## 057 — Quest tracker click opens the quest log properly
 
 Clicking a quest in the Quest Tracker widget when the map was closed

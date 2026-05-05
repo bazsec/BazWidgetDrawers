@@ -358,3 +358,108 @@ function QT.GetAchievementData(achievementID)
         isComplete = completed,
     }
 end
+
+---------------------------------------------------------------------------
+-- Tracked recipes (Profession panel "Track Recipe" checkbox)
+--
+-- Two parallel pools live in C_TradeSkillUI: regular recipes and
+-- recrafts. We fetch both, building a quest-shaped entry per recipe
+-- with each required reagent rendered as an objective line. Reagent
+-- counts come from ProfessionsUtil.AccumulateReagentsInPossession,
+-- which is what Blizzard's own ProfessionsRecipeTracker uses.
+---------------------------------------------------------------------------
+
+function QT.BuildRecipeEntry(recipeID, isRecraft)
+    if not _G.ProfessionsUtil or not _G.ProfessionsUtil.GetRecipeSchematic then
+        return nil
+    end
+
+    local ok, schematic = pcall(_G.ProfessionsUtil.GetRecipeSchematic, recipeID, isRecraft)
+    if not ok or not schematic then return nil end
+
+    local title = schematic.name or ""
+    if isRecraft and _G.PROFESSIONS_CRAFTING_FORM_RECRAFTING_HEADER then
+        local fmtOk, fmt = pcall(string.format, _G.PROFESSIONS_CRAFTING_FORM_RECRAFTING_HEADER, schematic.name or "")
+        if fmtOk then title = fmt end
+    end
+
+    local objectives = {}
+    local allMet = true
+
+    local PU = _G.ProfessionsUtil
+    for _, slot in ipairs(schematic.reagentSlotSchematics or {}) do
+        if PU.IsReagentSlotRequired and PU.IsReagentSlotRequired(slot) then
+            local reagent = slot.reagents and slot.reagents[1]
+            local name
+
+            if PU.IsReagentSlotBasicRequired and PU.IsReagentSlotBasicRequired(slot) then
+                if reagent and reagent.itemID and _G.Item and _G.Item.CreateFromItemID then
+                    local item = _G.Item:CreateFromItemID(reagent.itemID)
+                    if item and item.GetItemName then
+                        local nm = item:GetItemName()
+                        if nm and nm ~= "" then name = nm end
+                    end
+                elseif reagent and reagent.currencyID and _G.C_CurrencyInfo
+                       and _G.C_CurrencyInfo.GetCurrencyInfo then
+                    local info = _G.C_CurrencyInfo.GetCurrencyInfo(reagent.currencyID)
+                    if info and info.name then name = info.name end
+                end
+            elseif PU.IsReagentSlotModifyingRequired and PU.IsReagentSlotModifyingRequired(slot) then
+                if slot.slotInfo and slot.slotInfo.slotText then
+                    name = slot.slotInfo.slotText
+                end
+            end
+
+            if name and name ~= "" then
+                local quantityRequired = 1
+                if slot.GetQuantityRequired then
+                    local qrOk, qr = pcall(slot.GetQuantityRequired, slot, reagent)
+                    if qrOk and qr then quantityRequired = qr end
+                elseif reagent and reagent.quantityRequired then
+                    quantityRequired = reagent.quantityRequired
+                end
+
+                local quantity = 0
+                if PU.AccumulateReagentsInPossession then
+                    local qOk, q = pcall(PU.AccumulateReagentsInPossession, slot.reagents)
+                    if qOk and q then quantity = q end
+                end
+
+                local met = quantity >= quantityRequired
+                if not met then allMet = false end
+
+                objectives[#objectives + 1] = {
+                    text     = string.format("%d/%d %s", quantity, quantityRequired, name),
+                    finished = met,
+                }
+            end
+        end
+    end
+
+    return {
+        kind       = "recipe",
+        id         = recipeID,
+        isRecraft  = isRecraft,
+        title      = title,
+        objectives = objectives,
+        isComplete = allMet,
+    }
+end
+
+function QT.GetTrackedRecipes()
+    local out = {}
+    if not _G.C_TradeSkillUI or not _G.C_TradeSkillUI.GetRecipesTracked then return out end
+
+    for _, isRecraft in ipairs({ false, true }) do
+        local ok, list = pcall(_G.C_TradeSkillUI.GetRecipesTracked, isRecraft)
+        if ok and type(list) == "table" then
+            for _, recipeID in ipairs(list) do
+                local entry = QT.BuildRecipeEntry(recipeID, isRecraft)
+                if entry and entry.title ~= "" then
+                    out[#out + 1] = entry
+                end
+            end
+        end
+    end
+    return out
+end

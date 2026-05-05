@@ -141,6 +141,23 @@ function QT.CreateBlock()
             return
         end
 
+        if kind == "recipe" then
+            if button == "LeftButton" then
+                if not _G.ProfessionsFrame and _G.ProfessionsFrame_LoadUI then
+                    _G.ProfessionsFrame_LoadUI()
+                end
+                if _G.C_TradeSkillUI and _G.C_TradeSkillUI.OpenRecipe then
+                    pcall(_G.C_TradeSkillUI.OpenRecipe, block._questID)
+                end
+            elseif button == "RightButton" then
+                if _G.C_TradeSkillUI and _G.C_TradeSkillUI.SetRecipeTracked then
+                    pcall(_G.C_TradeSkillUI.SetRecipeTracked,
+                          block._questID, false, block._isRecraft and true or false)
+                end
+            end
+            return
+        end
+
         -- Quest
         if button == "LeftButton" then
             -- Auto-complete quests: open the turn-in dialog directly
@@ -357,10 +374,12 @@ function QT.PopulateBlock(block, quest)
     block._kind = quest.kind or "quest"
     block._isAutoComplete = quest.isAutoComplete
     block._isComplete = quest.isComplete
+    block._isRecraft = quest.isRecraft
 
     local isAchievement = (block._kind == "achievement")
     local isScenario    = (block._kind == "scenario")
-    local hideIcon      = isAchievement or isScenario
+    local isRecipe      = (block._kind == "recipe")
+    local hideIcon      = isAchievement or isScenario or isRecipe
 
     -- Scenario stage block rendering
     local useWidgetSet = isScenario and quest.widgetSetID and block.widgetContainer
